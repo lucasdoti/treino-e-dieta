@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Screen from '../../components/Screen';
@@ -9,9 +9,14 @@ import { mealTypeLabel } from '../../data/mealTypes';
 import { todayISO, formatDateBR, addDaysISO } from '../../utils/date';
 import { colors, spacing } from '../../theme/colors';
 
-export default function DietHomeScreen({ navigation }) {
+export default function DietHomeScreen({ navigation, route }) {
   const { mealLogs, deleteMealLog, profile } = useAppData();
   const [selectedDate, setSelectedDate] = useState(todayISO());
+
+  // Ao voltar de "aplicar cardápio", abre o diário exatamente no dia aplicado.
+  useEffect(() => {
+    if (route.params?.date) setSelectedDate(route.params.date);
+  }, [route.params?.date]);
 
   const dayLogs = mealLogs.filter((m) => m.date === selectedDate);
   const totals = dayLogs.reduce(
@@ -61,6 +66,12 @@ export default function DietHomeScreen({ navigation }) {
         ) : null}
       </Card>
 
+      {dayLogs.length === 0 ? (
+        <Text style={styles.emptyDay}>
+          Nenhuma refeição neste dia. Adicione uma refeição ou aplique um cardápio.
+        </Text>
+      ) : null}
+
       {dayLogs.map((log) => (
         <Card key={log.id} style={{ marginBottom: spacing.sm }}>
           <View style={styles.mealHeader}>
@@ -86,7 +97,7 @@ export default function DietHomeScreen({ navigation }) {
         <Button
           title="Cardápios"
           variant="outline"
-          onPress={() => navigation.navigate('MealPlanList')}
+          onPress={() => navigation.navigate('MealPlanList', { applyDate: selectedDate })}
           style={styles.actionBtn}
         />
         <Button
@@ -119,6 +130,7 @@ const styles = StyleSheet.create({
   dateText: { color: colors.text, fontSize: 16, fontWeight: '700' },
   actionsRow: { flexDirection: 'row', gap: spacing.sm },
   actionBtn: { flex: 1 },
+  emptyDay: { color: colors.textFaint, fontSize: 13, lineHeight: 19, marginBottom: spacing.md },
   totalCalories: { color: colors.text, fontSize: 22, fontWeight: '800' },
   macroLine: { color: colors.textMuted, fontSize: 12, marginTop: spacing.xs },
   mealHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xs },

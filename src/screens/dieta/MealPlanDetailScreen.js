@@ -5,16 +5,17 @@ import Screen from '../../components/Screen';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import { useAppData } from '../../context/AppDataContext';
-import { notify } from '../../utils/confirm';
+import { notify, confirmAction } from '../../utils/confirm';
 import { mealTypeLabel } from '../../data/mealTypes';
 import { computeItemMacros, computeSubstitutions } from '../../utils/nutrition';
-import { todayISO, formatDateBR } from '../../utils/date';
+import { todayISO, formatDateBR, addDaysISO } from '../../utils/date';
 import { colors, spacing, radius } from '../../theme/colors';
 
 export default function MealPlanDetailScreen({ navigation, route }) {
-  const { mealPlans, allFoods, getFoodById, applyMealPlanToDate } = useAppData();
+  const { mealPlans, mealLogs, allFoods, getFoodById, applyMealPlanToDate } = useAppData();
   const plan = mealPlans.find((p) => p.id === route.params?.planId);
   const [expandedKey, setExpandedKey] = useState(null);
+  const [applyDate, setApplyDate] = useState(route.params?.applyDate ?? todayISO());
 
   if (!plan) {
     return (
@@ -35,12 +36,29 @@ export default function MealPlanDetailScreen({ navigation, route }) {
     })
   );
 
-  async function handleApplyToday() {
-    const today = todayISO();
-    await applyMealPlanToDate(plan, today);
-    notify('Cardápio aplicado', `As refeições foram lançadas no diário de ${formatDateBR(today)}.`, () =>
-      navigation.navigate('DietHome')
+  const isToday = applyDate === todayISO();
+
+  async function doApply() {
+    await applyMealPlanToDate(plan, applyDate);
+    notify(
+      'Cardápio aplicado',
+      `As refeições foram lançadas no diário de ${formatDateBR(applyDate)}.`,
+      () => navigation.navigate('DietHome', { date: applyDate })
     );
+  }
+
+  function handleApply() {
+    const dayHasMeals = mealLogs.some((m) => m.date === applyDate);
+    if (dayHasMeals) {
+      confirmAction({
+        title: 'Dia já tem refeições',
+        message: `O diário de ${formatDateBR(applyDate)} já tem refeições lançadas. Adicionar as do cardápio mesmo assim?`,
+        confirmLabel: 'Adicionar',
+        onConfirm: doApply,
+      });
+      return;
+    }
+    doApply();
   }
 
   return (
@@ -116,11 +134,31 @@ export default function MealPlanDetailScreen({ navigation, route }) {
         </Card>
       ))}
 
-      <Button
-        title="Aplicar hoje no diário"
-        onPress={handleApplyToday}
-        style={{ marginTop: spacing.sm }}
-      />
+      <Card style={{ marginTop: spacing.sm }}>
+        <Text style={styles.applyLabel}>Aplicar no diário</Text>
+        <View style={styles.dateRow}>
+          <Pressable onPress={() => setApplyDate((d) => addDaysISO(d, -1))} hitSlop={8}>
+            <Ionicons name="chevron-back" size={22} color={colors.textMuted} />
+          </Pressable>
+          <View style={styles.dateCenter}>
+            <Text style={styles.dateText}>{formatDateBR(applyDate)}</Text>
+            <Text style={styles.dateHint}>{isToday ? 'Hoje' : 'Toque nas setas para mudar o dia'}</Text>
+          </View>
+          <Pressable onPress={() => setApplyDate((d) => addDaysISO(d, 1))} hitSlop={8}>
+            <Ionicons name="chevron-forward" size={22} color={colors.textMuted} />
+          </Pressable>
+        </View>
+        {!isToday ? (
+          <Pressable onPress={() => setApplyDate(todayISO())} style={styles.todayReset}>
+            <Text style={styles.todayResetText}>Voltar para hoje</Text>
+          </Pressable>
+        ) : null}
+        <Button
+          title={`Aplicar em ${formatDateBR(applyDate)}`}
+          onPress={handleApply}
+          style={{ marginTop: spacing.sm }}
+        />
+      </Card>
     </Screen>
   );
 }
@@ -147,4 +185,11 @@ const styles = StyleSheet.create({
   subLine: { color: colors.textMuted, fontSize: 13, marginTop: 3, borderRadius: radius.sm },
   subMacro: { color: colors.textFaint, fontSize: 12 },
   empty: { color: colors.textFaint, textAlign: 'center', marginTop: spacing.lg },
+  applyLabel: { color: colors.text, fontSize: 14, fontWeight: '700', marginBottom: spacing.sm },
+  dateRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  dateCenter: { alignItems: 'center', flex: 1 },
+  dateText: { color: colors.text, fontSize: 16, fontWeight: '700' },
+  dateHint: { color: colors.textFaint, fontSize: 11, marginTop: 2 },
+  todayReset: { alignSelf: 'center', marginTop: spacing.sm },
+  todayResetText: { color: colors.accent, fontSize: 12, fontWeight: '600' },
 });
