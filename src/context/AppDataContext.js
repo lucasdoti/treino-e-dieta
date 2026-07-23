@@ -22,6 +22,7 @@ const DEFAULT_PROFILE = {
   weightFrequency: 'semanal',
   incrementUpperKg: 2.5,
   incrementLowerKg: 5,
+  restSeconds: 90,
 };
 
 const AppDataContext = createContext(null);

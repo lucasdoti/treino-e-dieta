@@ -5,6 +5,7 @@ import Screen from '../../components/Screen';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import TextField from '../../components/TextField';
+import RestTimer from '../../components/RestTimer';
 import { useAppData } from '../../context/AppDataContext';
 import { suggestNextSession, detectPersonalRecords } from '../../utils/progression';
 import { notify } from '../../utils/confirm';
@@ -31,6 +32,8 @@ export default function WorkoutSessionScreen({ navigation, route }) {
     }));
   });
 
+  const [restSignal, setRestSignal] = useState(0);
+
   function addExercise(exercise) {
     setSessionExercises((prev) => [
       ...prev,
@@ -56,6 +59,7 @@ export default function WorkoutSessionScreen({ navigation, route }) {
   }
 
   function addSet(index) {
+    let added = false;
     setSessionExercises((prev) =>
       prev.map((e, i) => {
         if (i !== index) return e;
@@ -63,14 +67,17 @@ export default function WorkoutSessionScreen({ navigation, route }) {
         if (exercise?.muscleGroup === 'cardio') {
           const durationMin = parseFloat(String(e.draftDuration).replace(',', '.'));
           if (!durationMin) return e;
+          added = true;
           return { ...e, sets: [...e.sets, { durationMin }], draftDuration: '' };
         }
         const reps = parseInt(e.draftReps, 10);
         const weight = parseFloat(e.draftWeight.replace(',', '.'));
         if (!reps || Number.isNaN(weight)) return e;
+        added = true;
         return { ...e, sets: [...e.sets, { reps, weight }], draftReps: '', draftWeight: '' };
       })
     );
+    if (added) setRestSignal((s) => s + 1); // dispara o cronômetro de descanso
   }
 
   function removeSet(exerciseIndex, setIndex) {
@@ -118,6 +125,8 @@ export default function WorkoutSessionScreen({ navigation, route }) {
     <Screen>
       <Text style={styles.date}>{formatDateBR(logDate)}</Text>
       <Text style={styles.title}>{template?.name ?? 'Treino avulso'}</Text>
+
+      <RestTimer defaultSeconds={profile.restSeconds ?? 90} startSignal={restSignal} />
 
       {sessionExercises.map((entry, index) => {
         const exercise = getExerciseById(entry.exerciseId);

@@ -32,6 +32,7 @@ export default function ProfileSettingsScreen({ navigation }) {
   }
   const [incrementUpperKg, setIncrementUpperKg] = useState(String(profile.incrementUpperKg));
   const [incrementLowerKg, setIncrementLowerKg] = useState(String(profile.incrementLowerKg));
+  const [restSeconds, setRestSeconds] = useState(String(profile.restSeconds ?? 90));
 
   async function handleSaveName() {
     await updateProfile({ name: name.trim() });
@@ -44,6 +45,12 @@ export default function ProfileSettingsScreen({ navigation }) {
       incrementLowerKg: parseFloat(incrementLowerKg.replace(',', '.')) || profile.incrementLowerKg,
     });
     notify('Pronto', 'Incrementos salvos.');
+  }
+
+  async function handleSaveRest() {
+    const value = parseInt(restSeconds, 10);
+    await updateProfile({ restSeconds: value > 0 ? value : 90 });
+    notify('Pronto', 'Descanso padrão salvo.');
   }
 
   return (
@@ -102,6 +109,20 @@ export default function ProfileSettingsScreen({ navigation }) {
           keyboardType="decimal-pad"
         />
         <Button title="Salvar" onPress={handleSaveIncrements} />
+      </Card>
+
+      <Card style={{ marginTop: spacing.md }}>
+        <Text style={styles.cardTitle}>Descanso entre séries</Text>
+        <Text style={styles.helper}>
+          Tempo que o cronômetro usa por padrão ao iniciar um descanso no treino.
+        </Text>
+        <TextField
+          label="Segundos"
+          value={restSeconds}
+          onChangeText={setRestSeconds}
+          keyboardType="number-pad"
+        />
+        <Button title="Salvar" onPress={handleSaveRest} />
       </Card>
 
       {configured && user ? (
