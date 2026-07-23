@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import Screen from '../../components/Screen';
 import Chip from '../../components/Chip';
 import TextField from '../../components/TextField';
 import Button from '../../components/Button';
 import Card from '../../components/Card';
 import { useAppData } from '../../context/AppDataContext';
+import { notify } from '../../utils/confirm';
 import { ACTIVITY_LEVELS, GOALS, generateGoal } from '../../utils/calorieCalculator';
 import { ageFromBirthDate } from '../../utils/date';
 import { colors, spacing } from '../../theme/colors';
@@ -32,7 +33,7 @@ export default function GoalSetupScreen({ navigation }) {
   function handleGenerate() {
     const age = ageFromBirthDate(birthDate);
     if (!heightCm || !weightKg || !age) {
-      Alert.alert('Ops', 'Preencha altura, peso e data de nascimento (AAAA-MM-DD).');
+      notify('Ops', 'Preencha altura, peso e data de nascimento (AAAA-MM-DD).');
       return;
     }
     const result = generateGoal({
@@ -67,7 +68,7 @@ export default function GoalSetupScreen({ navigation }) {
 
   async function handleSaveManual() {
     if (!calorieTarget) {
-      Alert.alert('Ops', 'Informe a meta de calorias.');
+      notify('Ops', 'Informe a meta de calorias.');
       return;
     }
     await updateProfile({

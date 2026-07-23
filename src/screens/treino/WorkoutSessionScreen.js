@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Screen from '../../components/Screen';
 import Card from '../../components/Card';
@@ -67,7 +67,7 @@ export default function WorkoutSessionScreen({ navigation, route }) {
   async function handleFinish() {
     const withSets = sessionExercises.filter((e) => e.sets.length > 0);
     if (withSets.length === 0) {
-      Alert.alert('Ops', 'Registre ao menos uma série antes de salvar.');
+      notify('Ops', 'Registre ao menos uma série antes de salvar.');
       return;
     }
 

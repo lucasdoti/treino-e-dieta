@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { Alert } from 'react-native';
 import Screen from '../../components/Screen';
 import TextField from '../../components/TextField';
 import Button from '../../components/Button';
 import { useAppData } from '../../context/AppDataContext';
-import { confirmAction } from '../../utils/confirm';
+import { confirmAction, notify } from '../../utils/confirm';
 import { spacing } from '../../theme/colors';
 
 export default function FoodFormScreen({ navigation, route }) {
@@ -22,7 +21,7 @@ export default function FoodFormScreen({ navigation, route }) {
 
   async function handleSave() {
     if (!name.trim() || !caloriesPer100) {
-      Alert.alert('Ops', 'Informe ao menos nome e calorias por 100g.');
+      notify('Ops', 'Informe ao menos nome e calorias por 100g.');
       return;
     }
     await saveFood({

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import Screen from '../../components/Screen';
 import TextField from '../../components/TextField';
 import Chip from '../../components/Chip';
 import Button from '../../components/Button';
 import { useAppData } from '../../context/AppDataContext';
-import { confirmAction } from '../../utils/confirm';
+import { confirmAction, notify } from '../../utils/confirm';
 import { MUSCLE_GROUPS, EQUIPMENT } from '../../data/exerciseLibrary';
 import { colors, spacing } from '../../theme/colors';
 
@@ -20,7 +20,7 @@ export default function ExerciseFormScreen({ navigation, route }) {
 
   async function handleSave() {
     if (!name.trim()) {
-      Alert.alert('Ops', 'Dê um nome para o exercício.');
+      notify('Ops', 'Dê um nome para o exercício.');
       return;
     }
     if (editing) {

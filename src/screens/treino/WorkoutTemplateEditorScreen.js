@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable } from 'react-native';
 import Screen from '../../components/Screen';
@@ -7,7 +7,7 @@ import TextField from '../../components/TextField';
 import Button from '../../components/Button';
 import Card from '../../components/Card';
 import { useAppData } from '../../context/AppDataContext';
-import { confirmAction } from '../../utils/confirm';
+import { confirmAction, notify } from '../../utils/confirm';
 import { colors, spacing, radius } from '../../theme/colors';
 
 export default function WorkoutTemplateEditorScreen({ navigation, route }) {
@@ -41,11 +41,11 @@ export default function WorkoutTemplateEditorScreen({ navigation, route }) {
 
   async function handleSave() {
     if (!name.trim()) {
-      Alert.alert('Ops', 'Dê um nome para o treino.');
+      notify('Ops', 'Dê um nome para o treino.');
       return;
     }
     if (exerciseEntries.length === 0) {
-      Alert.alert('Ops', 'Adicione pelo menos um exercício.');
+      notify('Ops', 'Adicione pelo menos um exercício.');
       return;
     }
     await saveWorkoutTemplate({ id: editing?.id, name: name.trim(), exerciseEntries });

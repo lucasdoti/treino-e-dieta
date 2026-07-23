@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Screen from '../../components/Screen';
 import Card from '../../components/Card';
@@ -7,6 +7,7 @@ import Chip from '../../components/Chip';
 import Button from '../../components/Button';
 import TextField from '../../components/TextField';
 import { useAppData } from '../../context/AppDataContext';
+import { notify } from '../../utils/confirm';
 import { todayISO } from '../../utils/date';
 import { colors, spacing } from '../../theme/colors';
 
@@ -56,7 +57,7 @@ export default function AddMealEntryScreen({ navigation, route }) {
 
   async function handleSave() {
     if (entries.length === 0) {
-      Alert.alert('Ops', 'Adicione ao menos um alimento.');
+      notify('Ops', 'Adicione ao menos um alimento.');
       return;
     }
     const finalEntries = computed.map((c) => ({
