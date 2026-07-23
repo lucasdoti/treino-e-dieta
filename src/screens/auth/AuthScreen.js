@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import TextField from '../../components/TextField';
@@ -99,19 +99,21 @@ export default function AuthScreen() {
               style={{ marginTop: spacing.sm }}
             />
 
-            <Text style={styles.switchText}>
-              {isLogin ? 'Ainda não tem conta?' : 'Já tem conta?'}{' '}
-              <Text
-                style={styles.switchLink}
+            <View style={styles.switchRow}>
+              <Text style={styles.switchText}>
+                {isLogin ? 'Ainda não tem conta?' : 'Já tem conta?'}
+              </Text>
+              <Pressable
                 onPress={() => {
                   setError(null);
                   setInfo(null);
                   setMode(isLogin ? 'signup' : 'login');
                 }}
+                hitSlop={10}
               >
-                {isLogin ? 'Criar agora' : 'Entrar'}
-              </Text>
-            </Text>
+                <Text style={styles.switchLink}>{isLogin ? 'Criar agora' : 'Entrar'}</Text>
+              </Pressable>
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -144,6 +146,14 @@ const styles = StyleSheet.create({
   title: { color: colors.text, fontSize: 18, fontWeight: '700', marginBottom: spacing.md },
   error: { color: colors.danger, fontSize: 13, marginTop: spacing.xs },
   info: { color: colors.primary, fontSize: 13, marginTop: spacing.xs },
-  switchText: { color: colors.textMuted, fontSize: 13, textAlign: 'center', marginTop: spacing.md },
-  switchLink: { color: colors.primary, fontWeight: '700' },
+  switchRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: spacing.md,
+  },
+  switchText: { color: colors.textMuted, fontSize: 13, userSelect: 'none' },
+  switchLink: { color: colors.primary, fontWeight: '700', fontSize: 13, userSelect: 'none' },
 });
