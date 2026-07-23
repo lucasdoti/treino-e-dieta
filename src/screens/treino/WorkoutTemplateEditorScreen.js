@@ -37,6 +37,24 @@ export default function WorkoutTemplateEditorScreen({ navigation, route }) {
     setExerciseEntries((prev) => prev.filter((_, i) => i !== index));
   }
 
+  function moveEntry(index, dir) {
+    setExerciseEntries((prev) => {
+      const j = index + dir;
+      if (j < 0 || j >= prev.length) return prev;
+      const next = [...prev];
+      [next[index], next[j]] = [next[j], next[index]];
+      return next;
+    });
+  }
+
+  function duplicateEntry(index) {
+    setExerciseEntries((prev) => [
+      ...prev.slice(0, index + 1),
+      { ...prev[index] },
+      ...prev.slice(index + 1),
+    ]);
+  }
+
   function swapEntry(index, exercise) {
     setExerciseEntries((prev) =>
       prev.map((e, i) => {
@@ -89,6 +107,27 @@ export default function WorkoutTemplateEditorScreen({ navigation, route }) {
             <View style={styles.entryHeader}>
               <Text style={styles.entryName}>{exercise?.name ?? 'Exercício'}</Text>
               <View style={styles.entryActions}>
+                <Pressable onPress={() => moveEntry(index, -1)} hitSlop={6} disabled={index === 0}>
+                  <Ionicons
+                    name="chevron-up"
+                    size={19}
+                    color={index === 0 ? colors.textFaint : colors.textMuted}
+                  />
+                </Pressable>
+                <Pressable
+                  onPress={() => moveEntry(index, 1)}
+                  hitSlop={6}
+                  disabled={index === exerciseEntries.length - 1}
+                >
+                  <Ionicons
+                    name="chevron-down"
+                    size={19}
+                    color={index === exerciseEntries.length - 1 ? colors.textFaint : colors.textMuted}
+                  />
+                </Pressable>
+                <Pressable onPress={() => duplicateEntry(index)} hitSlop={6}>
+                  <Ionicons name="copy-outline" size={17} color={colors.textMuted} />
+                </Pressable>
                 <Pressable
                   onPress={() =>
                     navigation.navigate('ExercisePicker', {
@@ -96,11 +135,11 @@ export default function WorkoutTemplateEditorScreen({ navigation, route }) {
                       onSelect: (picked) => swapEntry(index, picked),
                     })
                   }
-                  hitSlop={8}
+                  hitSlop={6}
                 >
                   <Ionicons name="swap-horizontal" size={19} color={colors.accent} />
                 </Pressable>
-                <Pressable onPress={() => removeEntry(index)} hitSlop={8}>
+                <Pressable onPress={() => removeEntry(index)} hitSlop={6}>
                   <Ionicons name="trash-outline" size={18} color={colors.danger} />
                 </Pressable>
               </View>
@@ -173,7 +212,7 @@ function NumberField({ label, value, onChange, step = 1, min = 1 }) {
 const styles = StyleSheet.create({
   entryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
   entryName: { color: colors.text, fontSize: 15, fontWeight: '600', flex: 1 },
-  entryActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  entryActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   numberRow: { flexDirection: 'row', justifyContent: 'space-between' },
   numberField: { alignItems: 'center' },
   numberLabel: { color: colors.textMuted, fontSize: 11, marginBottom: 4 },

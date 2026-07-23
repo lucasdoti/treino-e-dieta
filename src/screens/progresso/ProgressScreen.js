@@ -7,7 +7,7 @@ import TextField from '../../components/TextField';
 import Button from '../../components/Button';
 import LineChart from '../../components/LineChart';
 import { useAppData } from '../../context/AppDataContext';
-import { computeMaxWeight, computeVolume } from '../../utils/progression';
+import { computeMaxWeight, computeVolume, computeTotalDuration } from '../../utils/progression';
 import { todayISO, formatDateBR, daysAgoISO } from '../../utils/date';
 import { colors, spacing } from '../../theme/colors';
 
@@ -84,10 +84,17 @@ function ExerciseProgressSection() {
 
   const [selectedId, setSelectedId] = useState(exerciseIds[0] ?? null);
 
+  const selectedExercise = selectedId ? getExerciseById(selectedId) : null;
+  const isCardio = selectedExercise?.muscleGroup === 'cardio';
+
   const history = selectedId ? getLogsForExercise(selectedId) : [];
   const points = history.map((h) => ({
     label: formatDateBR(h.date).slice(0, 5),
-    value: metric === 'peso' ? computeMaxWeight(h.sets) : computeVolume(h.sets),
+    value: isCardio
+      ? computeTotalDuration(h.sets)
+      : metric === 'peso'
+        ? computeMaxWeight(h.sets)
+        : computeVolume(h.sets),
   }));
 
   if (exerciseIds.length === 0) {
@@ -108,10 +115,14 @@ function ExerciseProgressSection() {
           );
         })}
       </View>
-      <View style={styles.chipRow}>
-        <Chip label="Carga máxima" selected={metric === 'peso'} onPress={() => setMetric('peso')} />
-        <Chip label="Volume" selected={metric === 'volume'} onPress={() => setMetric('volume')} />
-      </View>
+      {isCardio ? (
+        <Text style={styles.metricNote}>Tempo por sessão (min)</Text>
+      ) : (
+        <View style={styles.chipRow}>
+          <Chip label="Carga máxima" selected={metric === 'peso'} onPress={() => setMetric('peso')} />
+          <Chip label="Volume" selected={metric === 'volume'} onPress={() => setMetric('volume')} />
+        </View>
+      )}
       <Card>
         <LineChart points={points} color={colors.accent} />
       </Card>
@@ -158,4 +169,5 @@ const styles = StyleSheet.create({
   cardTitle: { color: colors.text, fontWeight: '700', fontSize: 14, marginBottom: spacing.sm },
   addRow: { flexDirection: 'row', alignItems: 'center' },
   empty: { color: colors.textFaint, fontSize: 13 },
+  metricNote: { color: colors.textMuted, fontSize: 13, fontWeight: '600', marginBottom: spacing.md },
 });

@@ -33,6 +33,7 @@ export default function ProfileSettingsScreen({ navigation }) {
   const [incrementUpperKg, setIncrementUpperKg] = useState(String(profile.incrementUpperKg));
   const [incrementLowerKg, setIncrementLowerKg] = useState(String(profile.incrementLowerKg));
   const [restSeconds, setRestSeconds] = useState(String(profile.restSeconds ?? 90));
+  const [waterGoalMl, setWaterGoalMl] = useState(String(profile.waterGoalMl ?? 2500));
 
   async function handleSaveName() {
     await updateProfile({ name: name.trim() });
@@ -51,6 +52,12 @@ export default function ProfileSettingsScreen({ navigation }) {
     const value = parseInt(restSeconds, 10);
     await updateProfile({ restSeconds: value > 0 ? value : 90 });
     notify('Pronto', 'Descanso padrão salvo.');
+  }
+
+  async function handleSaveWater() {
+    const value = parseInt(waterGoalMl, 10);
+    await updateProfile({ waterGoalMl: value > 0 ? value : 2500 });
+    notify('Pronto', 'Meta de água salva.');
   }
 
   return (
@@ -123,6 +130,18 @@ export default function ProfileSettingsScreen({ navigation }) {
           keyboardType="number-pad"
         />
         <Button title="Salvar" onPress={handleSaveRest} />
+      </Card>
+
+      <Card style={{ marginTop: spacing.md }}>
+        <Text style={styles.cardTitle}>Meta de água</Text>
+        <Text style={styles.helper}>Quantidade diária que aparece na barra de água da Dieta.</Text>
+        <TextField
+          label="Mililitros por dia (ml)"
+          value={waterGoalMl}
+          onChangeText={setWaterGoalMl}
+          keyboardType="number-pad"
+        />
+        <Button title="Salvar" onPress={handleSaveWater} />
       </Card>
 
       {configured && user ? (
