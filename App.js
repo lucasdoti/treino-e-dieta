@@ -23,6 +23,38 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
     'content',
     'width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover'
   );
+
+  // PWA: manifest, ícone do app (halter no verde) e metas para "adicionar à tela
+  // inicial" abrir como app. Injetado em runtime porque o export do Expo gera o
+  // index.html a cada build.
+  const upsertLink = (rel, href, attrs = {}) => {
+    const selector = `link[rel="${rel}"]`;
+    let el = document.querySelector(selector);
+    if (!el) {
+      el = document.createElement('link');
+      el.setAttribute('rel', rel);
+      document.head.appendChild(el);
+    }
+    el.setAttribute('href', href);
+    Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+  };
+  const upsertMeta = (name, content) => {
+    let el = document.querySelector(`meta[name="${name}"]`);
+    if (!el) {
+      el = document.createElement('meta');
+      el.setAttribute('name', name);
+      document.head.appendChild(el);
+    }
+    el.setAttribute('content', content);
+  };
+
+  upsertLink('manifest', '/manifest.json');
+  upsertLink('apple-touch-icon', '/apple-touch-icon.png');
+  upsertMeta('theme-color', '#4ADE80');
+  upsertMeta('mobile-web-app-capable', 'yes');
+  upsertMeta('apple-mobile-web-app-capable', 'yes');
+  upsertMeta('apple-mobile-web-app-status-bar-style', 'black-translucent');
+  upsertMeta('apple-mobile-web-app-title', 'Treino & Dieta');
 }
 
 // Decide o que mostrar: carregando a sessão, tela de login ou o app.
