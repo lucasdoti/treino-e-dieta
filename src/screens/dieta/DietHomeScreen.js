@@ -11,7 +11,7 @@ import { todayISO, formatDateBR, addDaysISO } from '../../utils/date';
 import { colors, spacing } from '../../theme/colors';
 
 export default function DietHomeScreen({ navigation, route }) {
-  const { mealLogs, deleteMealLog, profile } = useAppData();
+  const { mealLogs, deleteMealLog, profile, getWaterForDate, addWater } = useAppData();
   const [selectedDate, setSelectedDate] = useState(todayISO());
 
   // Ao voltar de "aplicar cardápio", abre o diário exatamente no dia aplicado.
@@ -34,6 +34,11 @@ export default function DietHomeScreen({ navigation, route }) {
   );
 
   const goalSet = Boolean(profile.calorieTarget);
+
+  const water = getWaterForDate(selectedDate);
+  const waterGoal = profile.waterGoalMl ?? 2500;
+  const waterPct = Math.min(1, water / waterGoal);
+  const fmtL = (ml) => `${(ml / 1000).toFixed(2).replace('.', ',')} L`;
 
   return (
     <Screen>
@@ -92,6 +97,37 @@ export default function DietHomeScreen({ navigation, route }) {
             />
           </>
         )}
+      </Card>
+
+      <Card style={{ marginBottom: spacing.md }}>
+        <View style={styles.waterHeader}>
+          <Ionicons name="water" size={18} color={colors.accent} />
+          <Text style={styles.waterTitle}>Água</Text>
+          <Text style={styles.waterTotal}>
+            {fmtL(water)} <Text style={styles.waterGoal}>/ {fmtL(waterGoal)}</Text>
+          </Text>
+        </View>
+        <View style={styles.track}>
+          <View style={[styles.fill, { width: `${waterPct * 100}%`, backgroundColor: colors.accent }]} />
+        </View>
+        <View style={styles.waterBtns}>
+          <Pressable
+            style={[styles.waterBtn, water <= 0 && styles.waterBtnDisabled]}
+            onPress={() => addWater(selectedDate, -250)}
+            disabled={water <= 0}
+          >
+            <Ionicons name="remove" size={16} color={colors.text} />
+            <Text style={styles.waterBtnText}>250</Text>
+          </Pressable>
+          <Pressable style={styles.waterBtn} onPress={() => addWater(selectedDate, 250)}>
+            <Ionicons name="add" size={16} color={colors.text} />
+            <Text style={styles.waterBtnText}>Copo 250ml</Text>
+          </Pressable>
+          <Pressable style={styles.waterBtn} onPress={() => addWater(selectedDate, 500)}>
+            <Ionicons name="add" size={16} color={colors.text} />
+            <Text style={styles.waterBtnText}>Garrafa 500ml</Text>
+          </Pressable>
+        </View>
       </Card>
 
       {dayLogs.length === 0 ? (
@@ -194,6 +230,25 @@ const styles = StyleSheet.create({
   macroValue: { color: colors.text, fontSize: 13, fontWeight: '600' },
   track: { height: 8, borderRadius: 4, backgroundColor: colors.surfaceAlt, overflow: 'hidden' },
   fill: { height: 8, borderRadius: 4 },
+
+  waterHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm },
+  waterTitle: { color: colors.text, fontSize: 15, fontWeight: '700', flex: 1 },
+  waterTotal: { color: colors.text, fontSize: 15, fontWeight: '700' },
+  waterGoal: { color: colors.textFaint, fontSize: 12, fontWeight: '600' },
+  waterBtns: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
+  waterBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: spacing.sm,
+    flex: 1,
+    justifyContent: 'center',
+  },
+  waterBtnDisabled: { opacity: 0.4 },
+  waterBtnText: { color: colors.text, fontSize: 12, fontWeight: '600' },
 
   mealHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xs },
   mealType: { color: colors.text, fontSize: 14, fontWeight: '700' },

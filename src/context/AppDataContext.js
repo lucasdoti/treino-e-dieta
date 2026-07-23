@@ -23,6 +23,7 @@ const DEFAULT_PROFILE = {
   incrementUpperKg: 2.5,
   incrementLowerKg: 5,
   restSeconds: 90,
+  waterGoalMl: 2500,
 };
 
 const AppDataContext = createContext(null);
@@ -35,6 +36,7 @@ export function AppDataProvider({ children }) {
   const [foods, setFoods] = useState([]);
   const [mealPlans, setMealPlans] = useState([]);
   const [mealLogs, setMealLogs] = useState([]);
+  const [waterLogs, setWaterLogs] = useState([]);
   const [bodyWeightLogs, setBodyWeightLogs] = useState([]);
   const [profile, setProfile] = useState(DEFAULT_PROFILE);
 
@@ -45,13 +47,14 @@ export function AppDataProvider({ children }) {
 
   useEffect(() => {
     (async () => {
-      const [ex, tpl, wLogs, fd, mPlans, mLogs, bwLogs, prof] = await Promise.all([
+      const [ex, tpl, wLogs, fd, mPlans, mLogs, water, bwLogs, prof] = await Promise.all([
         getCollection(KEYS.EXERCISES),
         getCollection(KEYS.WORKOUT_TEMPLATES),
         getCollection(KEYS.WORKOUT_LOGS),
         getCollection(KEYS.FOODS),
         getCollection(KEYS.MEAL_PLANS),
         getCollection(KEYS.MEAL_LOGS),
+        getCollection(KEYS.WATER_LOGS),
         getCollection(KEYS.BODY_WEIGHT_LOGS),
         getObject(KEYS.PROFILE, DEFAULT_PROFILE),
       ]);
@@ -61,6 +64,7 @@ export function AppDataProvider({ children }) {
       setFoods(fd);
       setMealPlans(mPlans);
       setMealLogs(mLogs);
+      setWaterLogs(water);
       setBodyWeightLogs(bwLogs);
       setProfile(prof);
       setLoading(false);
@@ -76,6 +80,7 @@ export function AppDataProvider({ children }) {
       foods,
       mealPlans,
       mealLogs,
+      waterLogs,
       bodyWeightLogs,
       profile,
     };
@@ -88,6 +93,7 @@ export function AppDataProvider({ children }) {
     const fd = snap.foods ?? [];
     const mPlans = snap.mealPlans ?? [];
     const mLogs = snap.mealLogs ?? [];
+    const water = snap.waterLogs ?? [];
     const bwLogs = snap.bodyWeightLogs ?? [];
     const prof = { ...DEFAULT_PROFILE, ...(snap.profile ?? {}) };
 
@@ -97,6 +103,7 @@ export function AppDataProvider({ children }) {
     setFoods(fd);
     setMealPlans(mPlans);
     setMealLogs(mLogs);
+    setWaterLogs(water);
     setBodyWeightLogs(bwLogs);
     setProfile(prof);
 
@@ -107,6 +114,7 @@ export function AppDataProvider({ children }) {
       saveCollection(KEYS.FOODS, fd),
       saveCollection(KEYS.MEAL_PLANS, mPlans),
       saveCollection(KEYS.MEAL_LOGS, mLogs),
+      saveCollection(KEYS.WATER_LOGS, water),
       saveCollection(KEYS.BODY_WEIGHT_LOGS, bwLogs),
       saveObject(KEYS.PROFILE, prof),
     ]);
@@ -154,7 +162,7 @@ export function AppDataProvider({ children }) {
     }, 1500);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [customExercises, workoutTemplates, workoutLogs, foods, mealPlans, mealLogs, bodyWeightLogs, profile, user]);
+  }, [customExercises, workoutTemplates, workoutLogs, foods, mealPlans, mealLogs, waterLogs, bodyWeightLogs, profile, user]);
 
   // Ao deslogar: limpa os dados locais para não vazar entre contas no aparelho.
   useEffect(() => {
@@ -169,6 +177,7 @@ export function AppDataProvider({ children }) {
       setFoods([]);
       setMealPlans([]);
       setMealLogs([]);
+      setWaterLogs([]);
       setBodyWeightLogs([]);
       setProfile(DEFAULT_PROFILE);
       Promise.all([
@@ -178,6 +187,7 @@ export function AppDataProvider({ children }) {
         saveCollection(KEYS.FOODS, []),
         saveCollection(KEYS.MEAL_PLANS, []),
         saveCollection(KEYS.MEAL_LOGS, []),
+        saveCollection(KEYS.WATER_LOGS, []),
         saveCollection(KEYS.BODY_WEIGHT_LOGS, []),
         saveObject(KEYS.PROFILE, DEFAULT_PROFILE),
       ]).catch(() => {});
@@ -344,6 +354,20 @@ export function AppDataProvider({ children }) {
     await saveCollection(KEYS.MEAL_LOGS, next);
   }
 
+  // ---- Água (uma linha por dia com o total em ml) ----
+  function getWaterForDate(date) {
+    return waterLogs.find((w) => w.date === date)?.ml ?? 0;
+  }
+
+  async function addWater(date, deltaMl) {
+    const existing = waterLogs.find((w) => w.date === date);
+    const next = existing
+      ? waterLogs.map((w) => (w.date === date ? { ...w, ml: Math.max(0, w.ml + deltaMl) } : w))
+      : [...waterLogs, { date, ml: Math.max(0, deltaMl) }];
+    setWaterLogs(next);
+    await saveCollection(KEYS.WATER_LOGS, next);
+  }
+
   // ---- Body weight logs ----
   async function addBodyWeightLog(entry) {
     const item = { ...entry, id: generateId() };
@@ -399,6 +423,10 @@ export function AppDataProvider({ children }) {
     mealLogs,
     addMealLog,
     deleteMealLog,
+
+    waterLogs,
+    getWaterForDate,
+    addWater,
 
     bodyWeightLogs,
     addBodyWeightLog,

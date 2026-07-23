@@ -7,6 +7,7 @@ export const KEYS = {
   FOODS: '@treino-e-dieta/foods',
   MEAL_PLANS: '@treino-e-dieta/mealPlans',
   MEAL_LOGS: '@treino-e-dieta/mealLogs',
+  WATER_LOGS: '@treino-e-dieta/waterLogs',
   BODY_WEIGHT_LOGS: '@treino-e-dieta/bodyWeightLogs',
   PROFILE: '@treino-e-dieta/profile',
 };
