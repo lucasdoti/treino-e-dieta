@@ -21,7 +21,7 @@ const MEAL_TYPES = [
 ];
 
 export default function AddMealEntryScreen({ navigation, route }) {
-  const { foods, addMealLog } = useAppData();
+  const { getFoodById, addMealLog } = useAppData();
   const date = route.params?.date ?? todayISO();
   const [mealType, setMealType] = useState('almoco');
   const [entries, setEntries] = useState([]);
@@ -39,7 +39,7 @@ export default function AddMealEntryScreen({ navigation, route }) {
   }
 
   function computeEntryMacros(entry) {
-    const food = foods.find((f) => f.id === entry.foodId);
+    const food = getFoodById(entry.foodId);
     const grams = parseFloat(String(entry.grams).replace(',', '.')) || 0;
     const factor = grams / 100;
     return {

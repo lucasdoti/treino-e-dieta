@@ -27,11 +27,16 @@ function roundToHalf(value) {
 }
 
 export function computeVolume(sets) {
-  return sets.reduce((total, s) => total + s.reps * s.weight, 0);
+  return sets.reduce((total, s) => total + (s.reps || 0) * (s.weight || 0), 0);
 }
 
 export function computeMaxWeight(sets) {
-  return sets.reduce((max, s) => Math.max(max, s.weight), 0);
+  return sets.reduce((max, s) => Math.max(max, s.weight || 0), 0);
+}
+
+// Soma o tempo (min) de séries de cardio.
+export function computeTotalDuration(sets) {
+  return sets.reduce((total, s) => total + (s.durationMin || 0), 0);
 }
 
 // Compara um novo lançamento com o histórico de sessões anteriores do mesmo

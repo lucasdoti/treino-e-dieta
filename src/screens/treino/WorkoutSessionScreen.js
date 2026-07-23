@@ -23,16 +23,27 @@ export default function WorkoutSessionScreen({ navigation, route }) {
       exerciseId: entry.exerciseId,
       targetRepsMin: entry.targetRepsMin,
       targetRepsMax: entry.targetRepsMax,
+      targetDurationMin: entry.targetDurationMin ?? null,
       sets: [],
       draftReps: '',
       draftWeight: '',
+      draftDuration: '',
     }));
   });
 
   function addExercise(exercise) {
     setSessionExercises((prev) => [
       ...prev,
-      { exerciseId: exercise.id, targetRepsMin: null, targetRepsMax: null, sets: [], draftReps: '', draftWeight: '' },
+      {
+        exerciseId: exercise.id,
+        targetRepsMin: null,
+        targetRepsMax: null,
+        targetDurationMin: null,
+        sets: [],
+        draftReps: '',
+        draftWeight: '',
+        draftDuration: '',
+      },
     ]);
   }
 
@@ -48,6 +59,12 @@ export default function WorkoutSessionScreen({ navigation, route }) {
     setSessionExercises((prev) =>
       prev.map((e, i) => {
         if (i !== index) return e;
+        const exercise = getExerciseById(e.exerciseId);
+        if (exercise?.muscleGroup === 'cardio') {
+          const durationMin = parseFloat(String(e.draftDuration).replace(',', '.'));
+          if (!durationMin) return e;
+          return { ...e, sets: [...e.sets, { durationMin }], draftDuration: '' };
+        }
         const reps = parseInt(e.draftReps, 10);
         const weight = parseFloat(e.draftWeight.replace(',', '.'));
         if (!reps || Number.isNaN(weight)) return e;
@@ -74,10 +91,12 @@ export default function WorkoutSessionScreen({ navigation, route }) {
     const prMessages = [];
     const entries = withSets.map((e) => {
       const exercise = getExerciseById(e.exerciseId);
-      const previousLogs = getLogsForExercise(e.exerciseId);
-      const pr = detectPersonalRecords({ newSets: e.sets, previousLogs });
-      if (pr.isWeightPR) prMessages.push(`🔥 Recorde de carga em ${exercise?.name}: ${pr.newMaxWeight}kg`);
-      if (pr.isVolumePR) prMessages.push(`🔥 Recorde de volume em ${exercise?.name}`);
+      if (exercise?.muscleGroup !== 'cardio') {
+        const previousLogs = getLogsForExercise(e.exerciseId);
+        const pr = detectPersonalRecords({ newSets: e.sets, previousLogs });
+        if (pr.isWeightPR) prMessages.push(`🔥 Recorde de carga em ${exercise?.name}: ${pr.newMaxWeight}kg`);
+        if (pr.isVolumePR) prMessages.push(`🔥 Recorde de volume em ${exercise?.name}`);
+      }
       return { exerciseId: e.exerciseId, exerciseName: exercise?.name ?? '', sets: e.sets };
     });
 
@@ -102,10 +121,11 @@ export default function WorkoutSessionScreen({ navigation, route }) {
 
       {sessionExercises.map((entry, index) => {
         const exercise = getExerciseById(entry.exerciseId);
+        const isCardio = exercise?.muscleGroup === 'cardio';
         const previousLogs = getLogsForExercise(entry.exerciseId);
         const lastLog = previousLogs[previousLogs.length - 1];
         const suggestion =
-          entry.targetRepsMin && lastLog
+          !isCardio && entry.targetRepsMin && lastLog
             ? suggestNextSession({
                 lastSets: lastLog.sets,
                 targetRepsMin: entry.targetRepsMin,
@@ -125,7 +145,10 @@ export default function WorkoutSessionScreen({ navigation, route }) {
               </Pressable>
             </View>
 
-            {entry.targetRepsMin ? (
+            {isCardio && entry.targetDurationMin ? (
+              <Text style={styles.meta}>Alvo: {entry.targetDurationMin} min</Text>
+            ) : null}
+            {!isCardio && entry.targetRepsMin ? (
               <Text style={styles.meta}>
                 Alvo: {entry.targetRepsMin}-{entry.targetRepsMax} reps
               </Text>
@@ -134,14 +157,19 @@ export default function WorkoutSessionScreen({ navigation, route }) {
             {suggestion ? <Text style={styles.suggestion}>{suggestion.message}</Text> : null}
             {!suggestion && lastLog ? (
               <Text style={styles.reference}>
-                Última vez: {lastLog.sets.map((s) => `${s.weight}kg x${s.reps}`).join(', ')}
+                Última vez:{' '}
+                {isCardio
+                  ? lastLog.sets.map((s) => `${s.durationMin} min`).join(', ')
+                  : lastLog.sets.map((s) => `${s.weight}kg x${s.reps}`).join(', ')}
               </Text>
             ) : null}
 
             {entry.sets.map((s, si) => (
               <View key={si} style={styles.setRow}>
                 <Text style={styles.setText}>
-                  Série {si + 1}: {s.weight}kg x {s.reps} reps
+                  {isCardio
+                    ? `Tempo: ${s.durationMin} min`
+                    : `Série ${si + 1}: ${s.weight}kg x ${s.reps} reps`}
                 </Text>
                 <Pressable onPress={() => removeSet(index, si)}>
                   <Ionicons name="trash-outline" size={16} color={colors.danger} />
@@ -149,25 +177,40 @@ export default function WorkoutSessionScreen({ navigation, route }) {
               </View>
             ))}
 
-            <View style={styles.draftRow}>
-              <TextField
-                containerStyle={styles.draftField}
-                placeholder="Peso (kg)"
-                keyboardType="decimal-pad"
-                value={entry.draftWeight}
-                onChangeText={(v) => updateDraft(index, { draftWeight: v })}
-              />
-              <TextField
-                containerStyle={styles.draftField}
-                placeholder="Reps"
-                keyboardType="number-pad"
-                value={entry.draftReps}
-                onChangeText={(v) => updateDraft(index, { draftReps: v })}
-              />
-              <Pressable style={styles.addSetBtn} onPress={() => addSet(index)}>
-                <Ionicons name="add" size={20} color={colors.background} />
-              </Pressable>
-            </View>
+            {isCardio ? (
+              <View style={styles.draftRow}>
+                <TextField
+                  containerStyle={styles.draftField}
+                  placeholder="Tempo (min)"
+                  keyboardType="number-pad"
+                  value={entry.draftDuration}
+                  onChangeText={(v) => updateDraft(index, { draftDuration: v })}
+                />
+                <Pressable style={styles.addSetBtn} onPress={() => addSet(index)}>
+                  <Ionicons name="add" size={20} color={colors.background} />
+                </Pressable>
+              </View>
+            ) : (
+              <View style={styles.draftRow}>
+                <TextField
+                  containerStyle={styles.draftField}
+                  placeholder="Peso (kg)"
+                  keyboardType="decimal-pad"
+                  value={entry.draftWeight}
+                  onChangeText={(v) => updateDraft(index, { draftWeight: v })}
+                />
+                <TextField
+                  containerStyle={styles.draftField}
+                  placeholder="Reps"
+                  keyboardType="number-pad"
+                  value={entry.draftReps}
+                  onChangeText={(v) => updateDraft(index, { draftReps: v })}
+                />
+                <Pressable style={styles.addSetBtn} onPress={() => addSet(index)}>
+                  <Ionicons name="add" size={20} color={colors.background} />
+                </Pressable>
+              </View>
+            )}
           </Card>
         );
       })}

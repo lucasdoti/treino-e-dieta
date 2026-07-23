@@ -156,10 +156,7 @@ export function generateWorkoutPlan({
       if (cardio) {
         exerciseEntries.push({
           exerciseId: cardio.id,
-          targetSets: 1,
-          targetRepsMin: 20,
-          targetRepsMax: 30,
-          isCardioMinutes: true,
+          targetDurationMin: 25,
         });
       }
     }

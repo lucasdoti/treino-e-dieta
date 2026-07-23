@@ -18,11 +18,15 @@ export default function WorkoutTemplateEditorScreen({ navigation, route }) {
   const [name, setName] = useState(editing?.name ?? '');
   const [exerciseEntries, setExerciseEntries] = useState(editing?.exerciseEntries ?? []);
 
+  function defaultEntryFor(exercise) {
+    if (exercise.muscleGroup === 'cardio') {
+      return { exerciseId: exercise.id, targetDurationMin: 20 };
+    }
+    return { exerciseId: exercise.id, targetSets: 3, targetRepsMin: 8, targetRepsMax: 12 };
+  }
+
   function addEntry(exercise) {
-    setExerciseEntries((prev) => [
-      ...prev,
-      { exerciseId: exercise.id, targetSets: 3, targetRepsMin: 8, targetRepsMax: 12 },
-    ]);
+    setExerciseEntries((prev) => [...prev, defaultEntryFor(exercise)]);
   }
 
   function updateEntry(index, changes) {
@@ -35,7 +39,15 @@ export default function WorkoutTemplateEditorScreen({ navigation, route }) {
 
   function swapEntry(index, exercise) {
     setExerciseEntries((prev) =>
-      prev.map((e, i) => (i === index ? { ...e, exerciseId: exercise.id } : e))
+      prev.map((e, i) => {
+        if (i !== index) return e;
+        const current = getExerciseById(e.exerciseId);
+        // Se trocar entre cardio e musculação, redefine os campos de alvo.
+        if ((current?.muscleGroup === 'cardio') !== (exercise.muscleGroup === 'cardio')) {
+          return defaultEntryFor(exercise);
+        }
+        return { ...e, exerciseId: exercise.id };
+      })
     );
   }
 
@@ -71,6 +83,7 @@ export default function WorkoutTemplateEditorScreen({ navigation, route }) {
 
       {exerciseEntries.map((entry, index) => {
         const exercise = getExerciseById(entry.exerciseId);
+        const isCardio = exercise?.muscleGroup === 'cardio';
         return (
           <Card key={index} style={{ marginBottom: spacing.sm }}>
             <View style={styles.entryHeader}>
@@ -92,23 +105,35 @@ export default function WorkoutTemplateEditorScreen({ navigation, route }) {
                 </Pressable>
               </View>
             </View>
-            <View style={styles.numberRow}>
-              <NumberField
-                label="Séries"
-                value={entry.targetSets}
-                onChange={(v) => updateEntry(index, { targetSets: v })}
-              />
-              <NumberField
-                label="Reps min"
-                value={entry.targetRepsMin}
-                onChange={(v) => updateEntry(index, { targetRepsMin: v })}
-              />
-              <NumberField
-                label="Reps max"
-                value={entry.targetRepsMax}
-                onChange={(v) => updateEntry(index, { targetRepsMax: v })}
-              />
-            </View>
+            {isCardio ? (
+              <View style={styles.numberRow}>
+                <NumberField
+                  label="Tempo (min)"
+                  value={entry.targetDurationMin ?? 20}
+                  onChange={(v) => updateEntry(index, { targetDurationMin: v })}
+                  step={5}
+                  min={5}
+                />
+              </View>
+            ) : (
+              <View style={styles.numberRow}>
+                <NumberField
+                  label="Séries"
+                  value={entry.targetSets}
+                  onChange={(v) => updateEntry(index, { targetSets: v })}
+                />
+                <NumberField
+                  label="Reps min"
+                  value={entry.targetRepsMin}
+                  onChange={(v) => updateEntry(index, { targetRepsMin: v })}
+                />
+                <NumberField
+                  label="Reps max"
+                  value={entry.targetRepsMax}
+                  onChange={(v) => updateEntry(index, { targetRepsMax: v })}
+                />
+              </View>
+            )}
           </Card>
         );
       })}
@@ -128,16 +153,16 @@ export default function WorkoutTemplateEditorScreen({ navigation, route }) {
   );
 }
 
-function NumberField({ label, value, onChange }) {
+function NumberField({ label, value, onChange, step = 1, min = 1 }) {
   return (
     <View style={styles.numberField}>
       <Text style={styles.numberLabel}>{label}</Text>
       <View style={styles.stepper}>
-        <Pressable onPress={() => onChange(Math.max(1, value - 1))} style={styles.stepperBtn}>
+        <Pressable onPress={() => onChange(Math.max(min, value - step))} style={styles.stepperBtn}>
           <Text style={styles.stepperBtnText}>−</Text>
         </Pressable>
         <Text style={styles.stepperValue}>{value}</Text>
-        <Pressable onPress={() => onChange(value + 1)} style={styles.stepperBtn}>
+        <Pressable onPress={() => onChange(value + step)} style={styles.stepperBtn}>
           <Text style={styles.stepperBtnText}>+</Text>
         </Pressable>
       </View>

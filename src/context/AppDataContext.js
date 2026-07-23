@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { KEYS, getCollection, saveCollection, getObject, saveObject } from '../storage/db';
 import { EXERCISE_LIBRARY } from '../data/exerciseLibrary';
+import { FOOD_LIBRARY } from '../data/foodLibrary';
 import { generateId } from '../utils/id';
 
 const DEFAULT_PROFILE = {
@@ -59,6 +60,13 @@ export function AppDataProvider({ children }) {
 
   function getExerciseById(exerciseId) {
     return allExercises.find((e) => e.id === exerciseId) ?? null;
+  }
+
+  // Alimentos = biblioteca padrão + os cadastrados pelo usuário
+  const allFoods = useMemo(() => [...FOOD_LIBRARY, ...foods], [foods]);
+
+  function getFoodById(foodId) {
+    return allFoods.find((f) => f.id === foodId) ?? null;
   }
 
   // ---- Exercises (custom only) ----
@@ -206,6 +214,8 @@ export function AppDataProvider({ children }) {
     getLogsForExercise,
 
     foods,
+    allFoods,
+    getFoodById,
     saveFood,
     deleteFood,
 

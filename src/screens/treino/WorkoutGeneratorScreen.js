@@ -119,9 +119,13 @@ export default function WorkoutGeneratorScreen({ navigation }) {
               <Text style={styles.templateName}>{template.name}</Text>
               {template.exerciseEntries.map((entry, j) => {
                 const exercise = getExerciseById(entry.exerciseId);
+                const isCardio = exercise?.muscleGroup === 'cardio';
                 return (
                   <Text key={j} style={styles.exerciseLine}>
-                    • {exercise?.name} — {entry.targetSets}x{entry.targetRepsMin}-{entry.targetRepsMax}
+                    • {exercise?.name} —{' '}
+                    {isCardio
+                      ? `${entry.targetDurationMin} min`
+                      : `${entry.targetSets}x${entry.targetRepsMin}-${entry.targetRepsMax}`}
                   </Text>
                 );
               })}
