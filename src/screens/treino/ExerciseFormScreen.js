@@ -5,6 +5,7 @@ import TextField from '../../components/TextField';
 import Chip from '../../components/Chip';
 import Button from '../../components/Button';
 import { useAppData } from '../../context/AppDataContext';
+import { confirmAction } from '../../utils/confirm';
 import { MUSCLE_GROUPS, EQUIPMENT } from '../../data/exerciseLibrary';
 import { colors, spacing } from '../../theme/colors';
 
@@ -31,17 +32,16 @@ export default function ExerciseFormScreen({ navigation, route }) {
   }
 
   function handleDelete() {
-    Alert.alert('Excluir exercício', `Remover "${editing.name}"?`, [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Excluir',
-        style: 'destructive',
-        onPress: async () => {
-          await deleteCustomExercise(editing.id);
-          navigation.goBack();
-        },
+    confirmAction({
+      title: 'Excluir exercício',
+      message: `Remover "${editing.name}"?`,
+      confirmLabel: 'Excluir',
+      destructive: true,
+      onConfirm: async () => {
+        await deleteCustomExercise(editing.id);
+        navigation.goBack();
       },
-    ]);
+    });
   }
 
   return (

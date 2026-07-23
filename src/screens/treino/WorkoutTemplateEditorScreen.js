@@ -7,6 +7,7 @@ import TextField from '../../components/TextField';
 import Button from '../../components/Button';
 import Card from '../../components/Card';
 import { useAppData } from '../../context/AppDataContext';
+import { confirmAction } from '../../utils/confirm';
 import { colors, spacing, radius } from '../../theme/colors';
 
 export default function WorkoutTemplateEditorScreen({ navigation, route }) {
@@ -52,17 +53,16 @@ export default function WorkoutTemplateEditorScreen({ navigation, route }) {
   }
 
   function handleDelete() {
-    Alert.alert('Excluir treino', `Remover "${editing.name}"?`, [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Excluir',
-        style: 'destructive',
-        onPress: async () => {
-          await deleteWorkoutTemplate(editing.id);
-          navigation.goBack();
-        },
+    confirmAction({
+      title: 'Excluir treino',
+      message: `Remover "${editing.name}"?`,
+      confirmLabel: 'Excluir',
+      destructive: true,
+      onConfirm: async () => {
+        await deleteWorkoutTemplate(editing.id);
+        navigation.goBack();
       },
-    ]);
+    });
   }
 
   return (

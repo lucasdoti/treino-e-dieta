@@ -92,6 +92,16 @@ export function AppDataProvider({ children }) {
     await saveCollection(KEYS.WORKOUT_TEMPLATES, next);
   }
 
+  // Salva vários templates de uma vez (usado pelo gerador). Não dá pra chamar
+  // saveWorkoutTemplate em loop porque cada chamada leria o mesmo estado antigo.
+  async function saveWorkoutTemplates(templates) {
+    const withIds = templates.map((t) => ({ ...t, id: t.id ?? generateId() }));
+    const next = [...workoutTemplates, ...withIds];
+    setWorkoutTemplates(next);
+    await saveCollection(KEYS.WORKOUT_TEMPLATES, next);
+    return withIds;
+  }
+
   async function deleteWorkoutTemplate(id) {
     const next = workoutTemplates.filter((t) => t.id !== id);
     setWorkoutTemplates(next);
@@ -187,6 +197,7 @@ export function AppDataProvider({ children }) {
 
     workoutTemplates,
     saveWorkoutTemplate,
+    saveWorkoutTemplates,
     deleteWorkoutTemplate,
 
     workoutLogs,

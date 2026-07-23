@@ -4,6 +4,7 @@ import Screen from '../../components/Screen';
 import TextField from '../../components/TextField';
 import Button from '../../components/Button';
 import { useAppData } from '../../context/AppDataContext';
+import { confirmAction } from '../../utils/confirm';
 import { spacing } from '../../theme/colors';
 
 export default function FoodFormScreen({ navigation, route }) {
@@ -37,17 +38,16 @@ export default function FoodFormScreen({ navigation, route }) {
   }
 
   function handleDelete() {
-    Alert.alert('Excluir alimento', `Remover "${editing.name}"?`, [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Excluir',
-        style: 'destructive',
-        onPress: async () => {
-          await deleteFood(editing.id);
-          navigation.goBack();
-        },
+    confirmAction({
+      title: 'Excluir alimento',
+      message: `Remover "${editing.name}"?`,
+      confirmLabel: 'Excluir',
+      destructive: true,
+      onConfirm: async () => {
+        await deleteFood(editing.id);
+        navigation.goBack();
       },
-    ]);
+    });
   }
 
   return (

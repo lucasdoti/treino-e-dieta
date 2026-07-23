@@ -17,7 +17,7 @@ import {
 import { colors, spacing, radius } from '../../theme/colors';
 
 export default function WorkoutGeneratorScreen({ navigation }) {
-  const { saveWorkoutTemplate, getExerciseById } = useAppData();
+  const { saveWorkoutTemplates, getExerciseById } = useAppData();
   const [goalKey, setGoalKey] = useState('hipertrofia');
   const [placeKey, setPlaceKey] = useState('academia');
   const [levelKey, setLevelKey] = useState('intermediario');
@@ -41,9 +41,7 @@ export default function WorkoutGeneratorScreen({ navigation }) {
   }
 
   async function handleSaveAll() {
-    for (const template of preview) {
-      await saveWorkoutTemplate(template);
-    }
+    await saveWorkoutTemplates(preview);
     navigation.navigate('WorkoutHome');
   }
 

@@ -7,6 +7,7 @@ import Button from '../../components/Button';
 import TextField from '../../components/TextField';
 import { useAppData } from '../../context/AppDataContext';
 import { suggestNextSession, detectPersonalRecords } from '../../utils/progression';
+import { notify } from '../../utils/confirm';
 import { todayISO, formatDateBR } from '../../utils/date';
 import { colors, spacing, radius } from '../../theme/colors';
 
@@ -88,9 +89,7 @@ export default function WorkoutSessionScreen({ navigation, route }) {
     });
 
     if (prMessages.length > 0) {
-      Alert.alert('Novo recorde!', prMessages.join('\n'), [
-        { text: 'OK', onPress: () => navigation.navigate('WorkoutHome') },
-      ]);
+      notify('Novo recorde!', prMessages.join('\n'), () => navigation.navigate('WorkoutHome'));
     } else {
       navigation.navigate('WorkoutHome');
     }
