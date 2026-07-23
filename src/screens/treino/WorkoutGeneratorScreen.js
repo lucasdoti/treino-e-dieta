@@ -10,6 +10,9 @@ import {
   GENERATOR_GOALS,
   GENERATOR_PLACES,
   GENERATOR_LEVELS,
+  GENERATOR_TIMES,
+  GENERATOR_BLOCKS,
+  GENERATOR_EMPHASES,
 } from '../../utils/workoutGenerator';
 import { colors, spacing, radius } from '../../theme/colors';
 
@@ -19,10 +22,21 @@ export default function WorkoutGeneratorScreen({ navigation }) {
   const [placeKey, setPlaceKey] = useState('academia');
   const [levelKey, setLevelKey] = useState('intermediario');
   const [daysPerWeek, setDaysPerWeek] = useState(3);
+  const [timeKey, setTimeKey] = useState(60);
+  const [blockMonths, setBlockMonths] = useState(1);
+  const [emphasis, setEmphasis] = useState('antagonista');
   const [preview, setPreview] = useState(null);
 
   function handleGenerate() {
-    const plan = generateWorkoutPlan({ goalKey, daysPerWeek, placeKey, levelKey });
+    const plan = generateWorkoutPlan({
+      goalKey,
+      daysPerWeek,
+      placeKey,
+      levelKey,
+      timeKey,
+      blockMonths,
+      emphasis,
+    });
     setPreview(plan);
   }
 
@@ -59,6 +73,13 @@ export default function WorkoutGeneratorScreen({ navigation }) {
         </Pressable>
       </View>
 
+      <Text style={styles.label}>Tempo por treino</Text>
+      <View style={styles.chipRow}>
+        {GENERATOR_TIMES.map((t) => (
+          <Chip key={t.key} label={t.label} selected={timeKey === t.key} onPress={() => setTimeKey(t.key)} />
+        ))}
+      </View>
+
       <Text style={styles.label}>Onde treina</Text>
       <View style={styles.chipRow}>
         {GENERATOR_PLACES.map((p) => (
@@ -72,6 +93,24 @@ export default function WorkoutGeneratorScreen({ navigation }) {
           <Chip key={l.key} label={l.label} selected={levelKey === l.key} onPress={() => setLevelKey(l.key)} />
         ))}
       </View>
+
+      <Text style={styles.label}>Duração do bloco</Text>
+      <View style={styles.chipRow}>
+        {GENERATOR_BLOCKS.map((b) => (
+          <Chip key={b.key} label={b.label} selected={blockMonths === b.key} onPress={() => setBlockMonths(b.key)} />
+        ))}
+      </View>
+
+      <Text style={styles.label}>Ênfase do superior</Text>
+      <View style={styles.chipRow}>
+        {GENERATOR_EMPHASES.map((e) => (
+          <Chip key={e.key} label={e.label} selected={emphasis === e.key} onPress={() => setEmphasis(e.key)} />
+        ))}
+      </View>
+      <Text style={styles.hint}>
+        Ao terminar o bloco, gere o próximo trocando a ênfase (antagonistas ↔ push/pull) para variar o
+        estímulo.
+      </Text>
 
       <Button title="Gerar treino" onPress={handleGenerate} style={{ marginTop: spacing.md }} />
 
@@ -99,6 +138,7 @@ export default function WorkoutGeneratorScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   label: { color: colors.textMuted, marginBottom: spacing.sm, fontSize: 13, fontWeight: '600' },
+  hint: { color: colors.textFaint, fontSize: 12, lineHeight: 17, marginTop: -spacing.xs },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: spacing.md },
   stepper: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md },
   stepperBtn: {

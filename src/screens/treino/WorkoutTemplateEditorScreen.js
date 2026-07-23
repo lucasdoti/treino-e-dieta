@@ -32,6 +32,12 @@ export default function WorkoutTemplateEditorScreen({ navigation, route }) {
     setExerciseEntries((prev) => prev.filter((_, i) => i !== index));
   }
 
+  function swapEntry(index, exercise) {
+    setExerciseEntries((prev) =>
+      prev.map((e, i) => (i === index ? { ...e, exerciseId: exercise.id } : e))
+    );
+  }
+
   async function handleSave() {
     if (!name.trim()) {
       Alert.alert('Ops', 'Dê um nome para o treino.');
@@ -69,9 +75,22 @@ export default function WorkoutTemplateEditorScreen({ navigation, route }) {
           <Card key={index} style={{ marginBottom: spacing.sm }}>
             <View style={styles.entryHeader}>
               <Text style={styles.entryName}>{exercise?.name ?? 'Exercício'}</Text>
-              <Pressable onPress={() => removeEntry(index)}>
-                <Ionicons name="trash-outline" size={18} color={colors.danger} />
-              </Pressable>
+              <View style={styles.entryActions}>
+                <Pressable
+                  onPress={() =>
+                    navigation.navigate('ExercisePicker', {
+                      initialGroup: exercise?.muscleGroup ?? null,
+                      onSelect: (picked) => swapEntry(index, picked),
+                    })
+                  }
+                  hitSlop={8}
+                >
+                  <Ionicons name="swap-horizontal" size={19} color={colors.accent} />
+                </Pressable>
+                <Pressable onPress={() => removeEntry(index)} hitSlop={8}>
+                  <Ionicons name="trash-outline" size={18} color={colors.danger} />
+                </Pressable>
+              </View>
             </View>
             <View style={styles.numberRow}>
               <NumberField
@@ -129,6 +148,7 @@ function NumberField({ label, value, onChange }) {
 const styles = StyleSheet.create({
   entryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
   entryName: { color: colors.text, fontSize: 15, fontWeight: '600', flex: 1 },
+  entryActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   numberRow: { flexDirection: 'row', justifyContent: 'space-between' },
   numberField: { alignItems: 'center' },
   numberLabel: { color: colors.textMuted, fontSize: 11, marginBottom: 4 },

@@ -7,6 +7,7 @@ export const MUSCLE_GROUPS = [
   { key: 'ombro', label: 'Ombro' },
   { key: 'biceps', label: 'Bíceps' },
   { key: 'triceps', label: 'Tríceps' },
+  { key: 'antebraco', label: 'Antebraço' },
   { key: 'quadriceps', label: 'Quadríceps' },
   { key: 'posterior', label: 'Posterior/Glúteo' },
   { key: 'panturrilha', label: 'Panturrilha' },
@@ -60,6 +61,13 @@ export const EXERCISE_LIBRARY = [
   { id: 'lib-triceps-frances', name: 'Tríceps francês (halter)', muscleGroup: 'triceps', equipment: 'halteres' },
   { id: 'lib-mergulho-banco', name: 'Mergulho no banco', muscleGroup: 'triceps', equipment: 'peso_corporal' },
   { id: 'lib-triceps-coice', name: 'Tríceps coice (halter)', muscleGroup: 'triceps', equipment: 'halteres' },
+
+  // Antebraço
+  { id: 'lib-rosca-punho-barra', name: 'Rosca de punho (barra)', muscleGroup: 'antebraco', equipment: 'barra', homeAlternative: 'Rosca de punho com halteres' },
+  { id: 'lib-rosca-inversa', name: 'Rosca inversa (barra)', muscleGroup: 'antebraco', equipment: 'barra', homeAlternative: 'Rosca inversa com halteres' },
+  { id: 'lib-rosca-punho-halteres', name: 'Rosca de punho (halteres)', muscleGroup: 'antebraco', equipment: 'halteres' },
+  { id: 'lib-rosca-punho-cabo', name: 'Rosca de punho na polia', muscleGroup: 'antebraco', equipment: 'cabo' },
+  { id: 'lib-farmer-walk', name: 'Caminhada do fazendeiro', muscleGroup: 'antebraco', equipment: 'halteres', homeAlternative: 'Segurar peso e caminhar' },
 
   // Quadríceps
   { id: 'lib-agachamento-livre', name: 'Agachamento livre (barra)', muscleGroup: 'quadriceps', equipment: 'barra', homeAlternative: 'Agachamento livre (peso corporal)' },

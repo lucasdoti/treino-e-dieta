@@ -8,8 +8,8 @@ import { colors, spacing, radius } from '../../theme/colors';
 
 export default function ExercisePickerScreen({ navigation, route }) {
   const { allExercises } = useAppData();
-  const [groupFilter, setGroupFilter] = useState(null);
   const onSelect = route.params?.onSelect;
+  const [groupFilter, setGroupFilter] = useState(route.params?.initialGroup ?? null);
 
   const filtered = useMemo(
     () => (groupFilter ? allExercises.filter((e) => e.muscleGroup === groupFilter) : allExercises),
