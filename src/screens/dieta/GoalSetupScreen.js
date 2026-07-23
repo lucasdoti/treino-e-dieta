@@ -8,7 +8,7 @@ import Card from '../../components/Card';
 import { useAppData } from '../../context/AppDataContext';
 import { notify } from '../../utils/confirm';
 import { ACTIVITY_LEVELS, GOALS, generateGoal } from '../../utils/calorieCalculator';
-import { ageFromBirthDate } from '../../utils/date';
+import { ageFromBirthDate, isoToBR, brToISO, maskDateBR } from '../../utils/date';
 import { colors, spacing } from '../../theme/colors';
 
 export default function GoalSetupScreen({ navigation }) {
@@ -24,16 +24,17 @@ export default function GoalSetupScreen({ navigation }) {
   // generated mode fields
   const [heightCm, setHeightCm] = useState(String(profile.heightCm ?? ''));
   const [weightKg, setWeightKg] = useState(String(profile.weightKg ?? ''));
-  const [birthDate, setBirthDate] = useState(profile.birthDate ?? '');
+  // Exibido/digitado em DD/MM/AAAA; guardado em ISO no perfil.
+  const [birthDate, setBirthDate] = useState(isoToBR(profile.birthDate ?? ''));
   const [sex, setSex] = useState(profile.sex ?? 'masculino');
   const [activityKey, setActivityKey] = useState(profile.activityKey ?? 'moderado');
   const [goalKey, setGoalKey] = useState(profile.goalKey ?? 'manter');
   const [generatedPreview, setGeneratedPreview] = useState(null);
 
   function handleGenerate() {
-    const age = ageFromBirthDate(birthDate);
+    const age = ageFromBirthDate(brToISO(birthDate));
     if (!heightCm || !weightKg || !age) {
-      notify('Ops', 'Preencha altura, peso e data de nascimento (AAAA-MM-DD).');
+      notify('Ops', 'Preencha altura, peso e data de nascimento (DD/MM/AAAA).');
       return;
     }
     const result = generateGoal({
@@ -58,7 +59,7 @@ export default function GoalSetupScreen({ navigation }) {
       },
       heightCm: parseFloat(heightCm),
       weightKg: parseFloat(weightKg.replace(',', '.')),
-      birthDate,
+      birthDate: brToISO(birthDate),
       sex,
       activityKey,
       goalKey,
@@ -108,10 +109,12 @@ export default function GoalSetupScreen({ navigation }) {
           <TextField label="Altura (cm)" value={heightCm} onChangeText={setHeightCm} keyboardType="decimal-pad" />
           <TextField label="Peso atual (kg)" value={weightKg} onChangeText={setWeightKg} keyboardType="decimal-pad" />
           <TextField
-            label="Data de nascimento (AAAA-MM-DD)"
+            label="Data de nascimento (DD/MM/AAAA)"
             value={birthDate}
-            onChangeText={setBirthDate}
-            placeholder="1995-06-20"
+            onChangeText={(v) => setBirthDate(maskDateBR(v))}
+            keyboardType="number-pad"
+            placeholder="20/06/1995"
+            maxLength={10}
           />
 
           <Text style={styles.label}>Sexo</Text>
