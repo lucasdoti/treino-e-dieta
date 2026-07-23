@@ -6,6 +6,7 @@ import { computeItemMacros, toGrams } from '../utils/nutrition';
 import { generateId } from '../utils/id';
 
 const DEFAULT_PROFILE = {
+  name: '',
   heightCm: null,
   weightKg: null,
   birthDate: null,

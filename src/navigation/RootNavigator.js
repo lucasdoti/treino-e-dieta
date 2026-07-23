@@ -24,10 +24,12 @@ import GoalSetupScreen from '../screens/dieta/GoalSetupScreen';
 
 import ProgressScreen from '../screens/progresso/ProgressScreen';
 import PerfilScreen from '../screens/perfil/PerfilScreen';
+import ProfileSettingsScreen from '../screens/perfil/ProfileSettingsScreen';
 
 const Tab = createBottomTabNavigator();
 const TreinoStackNav = createNativeStackNavigator();
 const DietaStackNav = createNativeStackNavigator();
+const PerfilStackNav = createNativeStackNavigator();
 
 const screenOptions = {
   headerStyle: { backgroundColor: colors.surface },
@@ -113,6 +115,19 @@ function DietaStack() {
   );
 }
 
+function PerfilStack() {
+  return (
+    <PerfilStackNav.Navigator screenOptions={screenOptions}>
+      <PerfilStackNav.Screen name="PerfilHome" component={PerfilScreen} options={{ title: 'Perfil' }} />
+      <PerfilStackNav.Screen
+        name="ProfileSettings"
+        component={ProfileSettingsScreen}
+        options={{ title: 'Configurações' }}
+      />
+    </PerfilStackNav.Navigator>
+  );
+}
+
 const navTheme = {
   ...DarkTheme,
   colors: {
@@ -148,7 +163,7 @@ export default function RootNavigator() {
         <Tab.Screen name="Treino" component={TreinoStack} />
         <Tab.Screen name="Dieta" component={DietaStack} />
         <Tab.Screen name="Progresso" component={ProgressScreen} />
-        <Tab.Screen name="Perfil" component={PerfilScreen} />
+        <Tab.Screen name="Perfil" component={PerfilStack} />
       </Tab.Navigator>
     </NavigationContainer>
   );
