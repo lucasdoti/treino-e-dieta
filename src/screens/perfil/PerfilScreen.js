@@ -7,7 +7,7 @@ import Button from '../../components/Button';
 import LineChart from '../../components/LineChart';
 import { useAppData } from '../../context/AppDataContext';
 import { GOALS } from '../../utils/calorieCalculator';
-import { ageFromBirthDate, daysAgoISO, formatDateBR } from '../../utils/date';
+import { ageFromBirthDate, daysAgoISO, formatDateBR, todayISO } from '../../utils/date';
 import { colors, spacing, radius } from '../../theme/colors';
 
 function initialsFrom(name) {
@@ -52,6 +52,46 @@ export default function PerfilScreen({ navigation }) {
       weightPoints,
     };
   }, [workoutLogs, bodyWeightLogs, mealLogs, profile.weightKg]);
+
+  const consistency = useMemo(() => {
+    const workoutDates = new Set(workoutLogs.map((l) => l.date));
+    const mealDates = new Set(mealLogs.map((m) => m.date));
+    const active = new Set([...workoutDates, ...mealDates]);
+
+    const LETTERS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']; // dom..sáb
+    const week = [];
+    for (let i = 6; i >= 0; i -= 1) {
+      const iso = daysAgoISO(i);
+      const dow = new Date(`${iso}T00:00:00`).getDay();
+      week.push({
+        iso,
+        letter: LETTERS[dow],
+        trained: workoutDates.has(iso),
+        dieted: mealDates.has(iso),
+        isToday: i === 0,
+      });
+    }
+
+    // Sequência de dias ativos (treino ou dieta), com carência para hoje.
+    let streak = 0;
+    let startOffset = null;
+    if (active.has(todayISO())) startOffset = 0;
+    else if (active.has(daysAgoISO(1))) startOffset = 1;
+    if (startOffset !== null) {
+      let i = startOffset;
+      while (active.has(daysAgoISO(i))) {
+        streak += 1;
+        i += 1;
+      }
+    }
+
+    return {
+      week,
+      streak,
+      workoutsThisWeek: week.filter((d) => d.trained).length,
+      dietDaysThisWeek: week.filter((d) => d.dieted).length,
+    };
+  }, [workoutLogs, mealLogs]);
 
   const deltaText =
     stats.weightDelta === null
@@ -109,8 +149,45 @@ export default function PerfilScreen({ navigation }) {
         />
       </View>
 
-      {/* Evolução do peso */}
+      {/* Constância */}
       <Card style={{ marginTop: spacing.md, marginBottom: spacing.md }}>
+        <View style={styles.streakRow}>
+          <Ionicons name="flame" size={22} color={colors.warning} />
+          <Text style={styles.streakNum}>{consistency.streak}</Text>
+          <Text style={styles.streakLabel}>
+            {consistency.streak === 1 ? 'dia seguido ativo' : 'dias seguidos ativos'}
+          </Text>
+        </View>
+        {consistency.streak === 0 ? (
+          <Text style={styles.streakHint}>Registre um treino ou refeição hoje para começar.</Text>
+        ) : null}
+
+        <View style={styles.weekStrip}>
+          {consistency.week.map((d) => (
+            <View key={d.iso} style={styles.dayCol}>
+              <Text style={[styles.dayLetter, d.isToday && styles.dayLetterToday]}>{d.letter}</Text>
+              <View
+                style={[
+                  styles.dayCircle,
+                  d.trained && styles.dayCircleTrained,
+                  d.isToday && styles.dayCircleToday,
+                ]}
+              >
+                {d.trained ? <Ionicons name="barbell" size={13} color={colors.background} /> : null}
+              </View>
+              <View style={[styles.dietDot, d.dieted && styles.dietDotOn]} />
+            </View>
+          ))}
+        </View>
+
+        <Text style={styles.legend}>
+          {consistency.workoutsThisWeek} treino(s) · {consistency.dietDaysThisWeek} dia(s) com dieta
+          na semana
+        </Text>
+      </Card>
+
+      {/* Evolução do peso */}
+      <Card style={{ marginBottom: spacing.md }}>
         <Text style={styles.cardTitle}>Evolução do peso</Text>
         <LineChart
           points={stats.weightPoints}
@@ -146,6 +223,30 @@ function StatTile({ icon, label, value, tint }) {
 }
 
 const styles = StyleSheet.create({
+  streakRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  streakNum: { color: colors.text, fontSize: 24, fontWeight: '800' },
+  streakLabel: { color: colors.textMuted, fontSize: 13, fontWeight: '600' },
+  streakHint: { color: colors.textFaint, fontSize: 12, marginTop: spacing.xs },
+  weekStrip: { flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.md },
+  dayCol: { alignItems: 'center', gap: 5, flex: 1 },
+  dayLetter: { color: colors.textFaint, fontSize: 11, fontWeight: '600' },
+  dayLetterToday: { color: colors.accent },
+  dayCircle: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: colors.surfaceAlt,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  dayCircleTrained: { backgroundColor: colors.primary },
+  dayCircleToday: { borderColor: colors.accent },
+  dietDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.border },
+  dietDotOn: { backgroundColor: colors.accent },
+  legend: { color: colors.textFaint, fontSize: 12, marginTop: spacing.md, textAlign: 'center' },
+
   identityRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   avatar: {
     width: 56,
