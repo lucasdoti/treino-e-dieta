@@ -24,6 +24,7 @@ const DEFAULT_PROFILE = {
   incrementLowerKg: 5,
   restSeconds: 90,
   waterGoalMl: 2500,
+  onboarded: false,
 };
 
 const AppDataContext = createContext(null);
@@ -44,6 +45,8 @@ export function AppDataProvider({ children }) {
   const hydratedRef = useRef(false); // já puxou/inicializou a nuvem?
   const skipNextPushRef = useRef(false); // evita reenviar logo após puxar
   const prevUserRef = useRef(null);
+  // Pronto para decidir o que mostrar (evita "piscar" onboarding antes do pull).
+  const [cloudReady, setCloudReady] = useState(!isSupabaseConfigured);
 
   useEffect(() => {
     (async () => {
@@ -125,6 +128,7 @@ export function AppDataProvider({ children }) {
   useEffect(() => {
     if (!isSupabaseConfigured || !user || loading) return;
     let cancelled = false;
+    setCloudReady(false);
     (async () => {
       try {
         const cloud = await fetchCloudData(user.id);
@@ -138,7 +142,10 @@ export function AppDataProvider({ children }) {
       } catch (e) {
         console.warn('Falha ao sincronizar (puxar):', e?.message);
       } finally {
-        if (!cancelled) hydratedRef.current = true;
+        if (!cancelled) {
+          hydratedRef.current = true;
+          setCloudReady(true);
+        }
       }
     })();
     return () => {
@@ -390,8 +397,15 @@ export function AppDataProvider({ children }) {
     await saveObject(KEYS.PROFILE, next);
   }
 
+  // Conclui o onboarding (salva os dados coletados e marca como feito).
+  async function completeOnboarding(changes = {}) {
+    await updateProfile({ ...changes, onboarded: true });
+  }
+
   const value = {
     loading,
+    cloudReady,
+    completeOnboarding,
     allExercises,
     customExercises,
     getExerciseById,

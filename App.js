@@ -4,9 +4,10 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
-import { AppDataProvider } from './src/context/AppDataContext';
+import { AppDataProvider, useAppData } from './src/context/AppDataContext';
 import RootNavigator from './src/navigation/RootNavigator';
 import AuthScreen from './src/screens/auth/AuthScreen';
+import OnboardingScreen from './src/screens/onboarding/OnboardingScreen';
 import { colors } from './src/theme/colors';
 
 // No web/PWA os safe-area insets (env(safe-area-inset-*)) só passam a valer
@@ -59,24 +60,51 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
 
 // Decide o que mostrar: carregando a sessão, tela de login ou o app.
 // Sem Supabase configurado, cai direto no app (modo local, como antes).
+function Splash() {
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' }}>
+      <ActivityIndicator color={colors.primary} />
+    </View>
+  );
+}
+
+// Dentro do AppDataProvider: espera os dados carregarem e decide entre
+// onboarding (conta nova e vazia) ou o app.
+function AppContent() {
+  const {
+    loading,
+    cloudReady,
+    profile,
+    workoutLogs,
+    workoutTemplates,
+    mealLogs,
+    foods,
+  } = useAppData();
+
+  if (loading || !cloudReady) return <Splash />;
+
+  const isEmpty =
+    !profile.name &&
+    !profile.calorieTarget &&
+    workoutLogs.length === 0 &&
+    workoutTemplates.length === 0 &&
+    mealLogs.length === 0 &&
+    foods.length === 0;
+
+  if (!profile.onboarded && isEmpty) return <OnboardingScreen />;
+
+  return <RootNavigator />;
+}
+
 function AppGate() {
   const { configured, session, loading } = useAuth();
 
-  if (configured && loading) {
-    return (
-      <View style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
-
-  if (configured && !session) {
-    return <AuthScreen />;
-  }
+  if (configured && loading) return <Splash />;
+  if (configured && !session) return <AuthScreen />;
 
   return (
     <AppDataProvider>
-      <RootNavigator />
+      <AppContent />
     </AppDataProvider>
   );
 }
