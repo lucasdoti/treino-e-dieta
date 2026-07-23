@@ -17,6 +17,9 @@ import DietHomeScreen from '../screens/dieta/DietHomeScreen';
 import FoodCatalogScreen from '../screens/dieta/FoodCatalogScreen';
 import FoodFormScreen from '../screens/dieta/FoodFormScreen';
 import AddMealEntryScreen from '../screens/dieta/AddMealEntryScreen';
+import MealPlanListScreen from '../screens/dieta/MealPlanListScreen';
+import MealPlanEditorScreen from '../screens/dieta/MealPlanEditorScreen';
+import MealPlanDetailScreen from '../screens/dieta/MealPlanDetailScreen';
 import GoalSetupScreen from '../screens/dieta/GoalSetupScreen';
 
 import ProgressScreen from '../screens/progresso/ProgressScreen';
@@ -89,6 +92,21 @@ function DietaStack() {
         name="AddMealEntry"
         component={AddMealEntryScreen}
         options={{ title: 'Adicionar refeição' }}
+      />
+      <DietaStackNav.Screen
+        name="MealPlanList"
+        component={MealPlanListScreen}
+        options={{ title: 'Cardápios' }}
+      />
+      <DietaStackNav.Screen
+        name="MealPlanEditor"
+        component={MealPlanEditorScreen}
+        options={{ title: 'Cardápio' }}
+      />
+      <DietaStackNav.Screen
+        name="MealPlanDetail"
+        component={MealPlanDetailScreen}
+        options={{ title: 'Cardápio' }}
       />
       <DietaStackNav.Screen name="GoalSetup" component={GoalSetupScreen} options={{ title: 'Meta' }} />
     </DietaStackNav.Navigator>

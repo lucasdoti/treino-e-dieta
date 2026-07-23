@@ -8,17 +8,9 @@ import Button from '../../components/Button';
 import TextField from '../../components/TextField';
 import { useAppData } from '../../context/AppDataContext';
 import { notify } from '../../utils/confirm';
+import { MEAL_TYPES } from '../../data/mealTypes';
 import { todayISO } from '../../utils/date';
 import { colors, spacing } from '../../theme/colors';
-
-const MEAL_TYPES = [
-  { key: 'cafe_da_manha', label: 'Café da manhã' },
-  { key: 'almoco', label: 'Almoço' },
-  { key: 'lanche', label: 'Lanche' },
-  { key: 'jantar', label: 'Jantar' },
-  { key: 'ceia', label: 'Ceia' },
-  { key: 'outro', label: 'Outro' },
-];
 
 export default function AddMealEntryScreen({ navigation, route }) {
   const { getFoodById, addMealLog } = useAppData();

@@ -5,6 +5,7 @@ import Screen from '../../components/Screen';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import { useAppData } from '../../context/AppDataContext';
+import { mealTypeLabel } from '../../data/mealTypes';
 import { todayISO, formatDateBR, addDaysISO } from '../../utils/date';
 import { colors, spacing } from '../../theme/colors';
 
@@ -81,7 +82,20 @@ export default function DietHomeScreen({ navigation }) {
         onPress={() => navigation.navigate('AddMealEntry', { date: selectedDate })}
         style={{ marginTop: spacing.sm, marginBottom: spacing.sm }}
       />
-      <Button title="Alimentos cadastrados" variant="outline" onPress={() => navigation.navigate('FoodCatalog')} />
+      <View style={styles.actionsRow}>
+        <Button
+          title="Cardápios"
+          variant="outline"
+          onPress={() => navigation.navigate('MealPlanList')}
+          style={styles.actionBtn}
+        />
+        <Button
+          title="Alimentos"
+          variant="outline"
+          onPress={() => navigation.navigate('FoodCatalog')}
+          style={styles.actionBtn}
+        />
+      </View>
       {goalSet ? (
         <Button
           title="Ajustar meta"
@@ -94,18 +108,6 @@ export default function DietHomeScreen({ navigation }) {
   );
 }
 
-function mealTypeLabel(key) {
-  const map = {
-    cafe_da_manha: 'Café da manhã',
-    almoco: 'Almoço',
-    lanche: 'Lanche',
-    jantar: 'Jantar',
-    ceia: 'Ceia',
-    outro: 'Outro',
-  };
-  return map[key] ?? key;
-}
-
 const styles = StyleSheet.create({
   dateRow: {
     flexDirection: 'row',
@@ -115,6 +117,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   dateText: { color: colors.text, fontSize: 16, fontWeight: '700' },
+  actionsRow: { flexDirection: 'row', gap: spacing.sm },
+  actionBtn: { flex: 1 },
   totalCalories: { color: colors.text, fontSize: 22, fontWeight: '800' },
   macroLine: { color: colors.textMuted, fontSize: 12, marginTop: spacing.xs },
   mealHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xs },

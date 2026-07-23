@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from '
 import { KEYS, getCollection, saveCollection, getObject, saveObject } from '../storage/db';
 import { EXERCISE_LIBRARY } from '../data/exerciseLibrary';
 import { FOOD_LIBRARY } from '../data/foodLibrary';
+import { computeItemMacros, toGrams } from '../utils/nutrition';
 import { generateId } from '../utils/id';
 
 const DEFAULT_PROFILE = {
@@ -27,17 +28,19 @@ export function AppDataProvider({ children }) {
   const [workoutTemplates, setWorkoutTemplates] = useState([]);
   const [workoutLogs, setWorkoutLogs] = useState([]);
   const [foods, setFoods] = useState([]);
+  const [mealPlans, setMealPlans] = useState([]);
   const [mealLogs, setMealLogs] = useState([]);
   const [bodyWeightLogs, setBodyWeightLogs] = useState([]);
   const [profile, setProfile] = useState(DEFAULT_PROFILE);
 
   useEffect(() => {
     (async () => {
-      const [ex, tpl, wLogs, fd, mLogs, bwLogs, prof] = await Promise.all([
+      const [ex, tpl, wLogs, fd, mPlans, mLogs, bwLogs, prof] = await Promise.all([
         getCollection(KEYS.EXERCISES),
         getCollection(KEYS.WORKOUT_TEMPLATES),
         getCollection(KEYS.WORKOUT_LOGS),
         getCollection(KEYS.FOODS),
+        getCollection(KEYS.MEAL_PLANS),
         getCollection(KEYS.MEAL_LOGS),
         getCollection(KEYS.BODY_WEIGHT_LOGS),
         getObject(KEYS.PROFILE, DEFAULT_PROFILE),
@@ -46,6 +49,7 @@ export function AppDataProvider({ children }) {
       setWorkoutTemplates(tpl);
       setWorkoutLogs(wLogs);
       setFoods(fd);
+      setMealPlans(mPlans);
       setMealLogs(mLogs);
       setBodyWeightLogs(bwLogs);
       setProfile(prof);
@@ -157,6 +161,47 @@ export function AppDataProvider({ children }) {
     await saveCollection(KEYS.FOODS, next);
   }
 
+  // ---- Cardápios (planos de refeição) ----
+  async function saveMealPlan(plan) {
+    const exists = mealPlans.some((p) => p.id === plan.id);
+    const next = exists
+      ? mealPlans.map((p) => (p.id === plan.id ? plan : p))
+      : [...mealPlans, { ...plan, id: plan.id ?? generateId() }];
+    setMealPlans(next);
+    await saveCollection(KEYS.MEAL_PLANS, next);
+  }
+
+  async function deleteMealPlan(id) {
+    const next = mealPlans.filter((p) => p.id !== id);
+    setMealPlans(next);
+    await saveCollection(KEYS.MEAL_PLANS, next);
+  }
+
+  // Lança todas as refeições do cardápio no diário de uma data (de uma vez, para
+  // não ler estado antigo em loop). Cada refeição vira um mealLog.
+  async function applyMealPlanToDate(plan, date) {
+    const newLogs = plan.meals
+      .filter((meal) => meal.items.length > 0)
+      .map((meal) => ({
+        id: generateId(),
+        date,
+        mealType: meal.mealType,
+        entries: meal.items.map((item) => {
+          const food = getFoodById(item.foodId);
+          return {
+            foodId: item.foodId,
+            foodName: food?.name ?? '',
+            grams: toGrams(item.grams),
+            ...computeItemMacros(food, item.grams),
+          };
+        }),
+      }));
+    const next = [...mealLogs, ...newLogs];
+    setMealLogs(next);
+    await saveCollection(KEYS.MEAL_LOGS, next);
+    return newLogs;
+  }
+
   // ---- Meal logs ----
   async function addMealLog(mealLog) {
     const item = { ...mealLog, id: generateId() };
@@ -218,6 +263,11 @@ export function AppDataProvider({ children }) {
     getFoodById,
     saveFood,
     deleteFood,
+
+    mealPlans,
+    saveMealPlan,
+    deleteMealPlan,
+    applyMealPlanToDate,
 
     mealLogs,
     addMealLog,
