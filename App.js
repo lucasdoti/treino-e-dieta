@@ -1,10 +1,13 @@
 import React from 'react';
-import { Platform } from 'react-native';
+import { Platform, View, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { AppDataProvider } from './src/context/AppDataContext';
 import RootNavigator from './src/navigation/RootNavigator';
+import AuthScreen from './src/screens/auth/AuthScreen';
+import { colors } from './src/theme/colors';
 
 // No web/PWA os safe-area insets (env(safe-area-inset-*)) só passam a valer
 // com viewport-fit=cover — sem isso a barra inferior fica cortada em celulares
@@ -22,14 +25,38 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
   );
 }
 
+// Decide o que mostrar: carregando a sessão, tela de login ou o app.
+// Sem Supabase configurado, cai direto no app (modo local, como antes).
+function AppGate() {
+  const { configured, session, loading } = useAuth();
+
+  if (configured && loading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (configured && !session) {
+    return <AuthScreen />;
+  }
+
+  return (
+    <AppDataProvider>
+      <RootNavigator />
+    </AppDataProvider>
+  );
+}
+
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <AppDataProvider>
-          <RootNavigator />
+        <AuthProvider>
+          <AppGate />
           <StatusBar style="light" />
-        </AppDataProvider>
+        </AuthProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

@@ -1,9 +1,12 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { KEYS, getCollection, saveCollection, getObject, saveObject } from '../storage/db';
 import { EXERCISE_LIBRARY } from '../data/exerciseLibrary';
 import { FOOD_LIBRARY } from '../data/foodLibrary';
 import { computeItemMacros, toGrams } from '../utils/nutrition';
 import { generateId } from '../utils/id';
+import { useAuth } from './AuthContext';
+import { isSupabaseConfigured } from '../config/supabase';
+import { fetchCloudData, saveCloudData } from '../sync/cloudSync';
 
 const DEFAULT_PROFILE = {
   name: '',
@@ -34,6 +37,11 @@ export function AppDataProvider({ children }) {
   const [bodyWeightLogs, setBodyWeightLogs] = useState([]);
   const [profile, setProfile] = useState(DEFAULT_PROFILE);
 
+  const { user } = useAuth();
+  const hydratedRef = useRef(false); // já puxou/inicializou a nuvem?
+  const skipNextPushRef = useRef(false); // evita reenviar logo após puxar
+  const prevUserRef = useRef(null);
+
   useEffect(() => {
     (async () => {
       const [ex, tpl, wLogs, fd, mPlans, mLogs, bwLogs, prof] = await Promise.all([
@@ -57,6 +65,123 @@ export function AppDataProvider({ children }) {
       setLoading(false);
     })();
   }, []);
+
+  // ---- Sincronização com a nuvem (só quando há Supabase + usuário logado) ----
+  function currentSnapshot() {
+    return {
+      exercises: customExercises,
+      workoutTemplates,
+      workoutLogs,
+      foods,
+      mealPlans,
+      mealLogs,
+      bodyWeightLogs,
+      profile,
+    };
+  }
+
+  async function hydrateFromSnapshot(snap) {
+    const ex = snap.exercises ?? [];
+    const tpl = snap.workoutTemplates ?? [];
+    const wLogs = snap.workoutLogs ?? [];
+    const fd = snap.foods ?? [];
+    const mPlans = snap.mealPlans ?? [];
+    const mLogs = snap.mealLogs ?? [];
+    const bwLogs = snap.bodyWeightLogs ?? [];
+    const prof = { ...DEFAULT_PROFILE, ...(snap.profile ?? {}) };
+
+    setCustomExercises(ex);
+    setWorkoutTemplates(tpl);
+    setWorkoutLogs(wLogs);
+    setFoods(fd);
+    setMealPlans(mPlans);
+    setMealLogs(mLogs);
+    setBodyWeightLogs(bwLogs);
+    setProfile(prof);
+
+    await Promise.all([
+      saveCollection(KEYS.EXERCISES, ex),
+      saveCollection(KEYS.WORKOUT_TEMPLATES, tpl),
+      saveCollection(KEYS.WORKOUT_LOGS, wLogs),
+      saveCollection(KEYS.FOODS, fd),
+      saveCollection(KEYS.MEAL_PLANS, mPlans),
+      saveCollection(KEYS.MEAL_LOGS, mLogs),
+      saveCollection(KEYS.BODY_WEIGHT_LOGS, bwLogs),
+      saveObject(KEYS.PROFILE, prof),
+    ]);
+  }
+
+  // Ao logar: puxa os dados da nuvem. Se a conta for nova (sem dados), envia o
+  // que já existe localmente (migra os dados locais para a conta).
+  useEffect(() => {
+    if (!isSupabaseConfigured || !user || loading) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const cloud = await fetchCloudData(user.id);
+        if (cancelled) return;
+        if (cloud) {
+          skipNextPushRef.current = true;
+          await hydrateFromSnapshot(cloud);
+        } else {
+          await saveCloudData(user.id, currentSnapshot());
+        }
+      } catch (e) {
+        console.warn('Falha ao sincronizar (puxar):', e?.message);
+      } finally {
+        if (!cancelled) hydratedRef.current = true;
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, loading]);
+
+  // Ao mudar qualquer dado (já hidratado): envia para a nuvem (com debounce).
+  useEffect(() => {
+    if (!isSupabaseConfigured || !user || !hydratedRef.current) return;
+    if (skipNextPushRef.current) {
+      skipNextPushRef.current = false;
+      return;
+    }
+    const snapshot = currentSnapshot();
+    const timer = setTimeout(() => {
+      saveCloudData(user.id, snapshot).catch((e) =>
+        console.warn('Falha ao sincronizar (enviar):', e?.message)
+      );
+    }, 1500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customExercises, workoutTemplates, workoutLogs, foods, mealPlans, mealLogs, bodyWeightLogs, profile, user]);
+
+  // Ao deslogar: limpa os dados locais para não vazar entre contas no aparelho.
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    const prev = prevUserRef.current;
+    prevUserRef.current = user;
+    if (prev && !user) {
+      hydratedRef.current = false;
+      setCustomExercises([]);
+      setWorkoutTemplates([]);
+      setWorkoutLogs([]);
+      setFoods([]);
+      setMealPlans([]);
+      setMealLogs([]);
+      setBodyWeightLogs([]);
+      setProfile(DEFAULT_PROFILE);
+      Promise.all([
+        saveCollection(KEYS.EXERCISES, []),
+        saveCollection(KEYS.WORKOUT_TEMPLATES, []),
+        saveCollection(KEYS.WORKOUT_LOGS, []),
+        saveCollection(KEYS.FOODS, []),
+        saveCollection(KEYS.MEAL_PLANS, []),
+        saveCollection(KEYS.MEAL_LOGS, []),
+        saveCollection(KEYS.BODY_WEIGHT_LOGS, []),
+        saveObject(KEYS.PROFILE, DEFAULT_PROFILE),
+      ]).catch(() => {});
+    }
+  }, [user]);
 
   const allExercises = useMemo(
     () => [...EXERCISE_LIBRARY, ...customExercises],

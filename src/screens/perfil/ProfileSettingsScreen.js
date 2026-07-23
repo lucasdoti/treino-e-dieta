@@ -6,7 +6,8 @@ import Chip from '../../components/Chip';
 import TextField from '../../components/TextField';
 import Button from '../../components/Button';
 import { useAppData } from '../../context/AppDataContext';
-import { notify } from '../../utils/confirm';
+import { useAuth } from '../../context/AuthContext';
+import { confirmAction, notify } from '../../utils/confirm';
 import { colors, spacing } from '../../theme/colors';
 
 const FREQUENCIES = [
@@ -17,7 +18,18 @@ const FREQUENCIES = [
 
 export default function ProfileSettingsScreen({ navigation }) {
   const { profile, updateProfile } = useAppData();
+  const { configured, user, signOut } = useAuth();
   const [name, setName] = useState(profile.name ?? '');
+
+  function handleSignOut() {
+    confirmAction({
+      title: 'Sair da conta',
+      message: 'Você quer sair? Seus dados estão salvos na nuvem e voltam ao entrar de novo.',
+      confirmLabel: 'Sair',
+      destructive: true,
+      onConfirm: () => signOut(),
+    });
+  }
   const [incrementUpperKg, setIncrementUpperKg] = useState(String(profile.incrementUpperKg));
   const [incrementLowerKg, setIncrementLowerKg] = useState(String(profile.incrementLowerKg));
 
@@ -91,6 +103,15 @@ export default function ProfileSettingsScreen({ navigation }) {
         />
         <Button title="Salvar" onPress={handleSaveIncrements} />
       </Card>
+
+      {configured && user ? (
+        <Card style={{ marginTop: spacing.md }}>
+          <Text style={styles.cardTitle}>Conta</Text>
+          <Text style={styles.summaryLine}>{user.email}</Text>
+          <Text style={styles.helper}>Seus dados sincronizam automaticamente na nuvem.</Text>
+          <Button title="Sair da conta" variant="danger" onPress={handleSignOut} />
+        </Card>
+      ) : null}
     </Screen>
   );
 }
