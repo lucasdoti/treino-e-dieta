@@ -11,6 +11,7 @@ import ExerciseFormScreen from '../screens/treino/ExerciseFormScreen';
 import WorkoutTemplateEditorScreen from '../screens/treino/WorkoutTemplateEditorScreen';
 import WorkoutSessionScreen from '../screens/treino/WorkoutSessionScreen';
 import WorkoutGeneratorScreen from '../screens/treino/WorkoutGeneratorScreen';
+import WorkoutLogDetailScreen from '../screens/treino/WorkoutLogDetailScreen';
 import ExercisePickerScreen from '../screens/treino/ExercisePickerScreen';
 
 import DietHomeScreen from '../screens/dieta/DietHomeScreen';
@@ -70,6 +71,11 @@ function TreinoStack() {
         name="WorkoutGenerator"
         component={WorkoutGeneratorScreen}
         options={{ title: 'Gerar treino' }}
+      />
+      <TreinoStackNav.Screen
+        name="WorkoutLogDetail"
+        component={WorkoutLogDetailScreen}
+        options={{ title: 'Treino lançado' }}
       />
       <TreinoStackNav.Screen
         name="ExercisePicker"

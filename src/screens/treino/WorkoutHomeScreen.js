@@ -74,11 +74,16 @@ export default function WorkoutHomeScreen({ navigation }) {
         <Text style={styles.empty}>Nenhum treino lançado ainda.</Text>
       ) : (
         recentLogs.map((log) => (
-          <Card key={log.id} style={{ marginBottom: spacing.sm }}>
-            <Text style={styles.logDate}>{formatDateBR(log.date)}</Text>
-            <Text style={styles.templateName}>{log.templateName}</Text>
-            <Text style={styles.templateMeta}>{log.entries.length} exercício(s) lançado(s)</Text>
-          </Card>
+          <Pressable
+            key={log.id}
+            onPress={() => navigation.navigate('WorkoutLogDetail', { logId: log.id })}
+          >
+            <Card style={{ marginBottom: spacing.sm }}>
+              <Text style={styles.logDate}>{formatDateBR(log.date)}</Text>
+              <Text style={styles.templateName}>{log.templateName}</Text>
+              <Text style={styles.templateMeta}>{log.entries.length} exercício(s) lançado(s)</Text>
+            </Card>
+          </Pressable>
         ))
       )}
     </Screen>
