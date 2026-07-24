@@ -25,6 +25,13 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
     'width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover'
   );
 
+  // Sinaliza que a página já está em português e não deve ser traduzida pelo
+  // navegador — a tradução automática (Chrome/Samsung) reordenava textos como
+  // "Ganhar massa" -> "Massa Ganhar".
+  document.documentElement.setAttribute('lang', 'pt-BR');
+  document.documentElement.setAttribute('translate', 'no');
+  document.documentElement.classList.add('notranslate');
+
   // PWA: manifest, ícone do app (halter no verde) e metas para "adicionar à tela
   // inicial" abrir como app. Injetado em runtime porque o export do Expo gera o
   // index.html a cada build.
@@ -56,6 +63,7 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
   upsertMeta('apple-mobile-web-app-capable', 'yes');
   upsertMeta('apple-mobile-web-app-status-bar-style', 'black-translucent');
   upsertMeta('apple-mobile-web-app-title', 'Treino & Dieta');
+  upsertMeta('google', 'notranslate');
 }
 
 // Decide o que mostrar: carregando a sessão, tela de login ou o app.
