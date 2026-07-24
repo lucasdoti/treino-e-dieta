@@ -12,7 +12,6 @@ import {
   GENERATOR_LEVELS,
   GENERATOR_TIMES,
   GENERATOR_BLOCKS,
-  GENERATOR_EMPHASES,
 } from '../../utils/workoutGenerator';
 import { colors, spacing, radius } from '../../theme/colors';
 
@@ -24,8 +23,9 @@ export default function WorkoutGeneratorScreen({ navigation }) {
   const [daysPerWeek, setDaysPerWeek] = useState(3);
   const [timeKey, setTimeKey] = useState(60);
   const [blockMonths, setBlockMonths] = useState(1);
-  const [emphasis, setEmphasis] = useState('antagonista');
   const [preview, setPreview] = useState(null);
+  // Ênfase do superior é definida internamente (o usuário não precisa escolher).
+  const emphasis = 'antagonista';
 
   function handleGenerate() {
     const plan = generateWorkoutPlan({
@@ -92,22 +92,14 @@ export default function WorkoutGeneratorScreen({ navigation }) {
         ))}
       </View>
 
-      <Text style={styles.label}>Duração do bloco</Text>
+      <Text style={styles.label}>Por quantos meses vai treinar?</Text>
       <View style={styles.chipRow}>
         {GENERATOR_BLOCKS.map((b) => (
           <Chip key={b.key} label={b.label} selected={blockMonths === b.key} onPress={() => setBlockMonths(b.key)} />
         ))}
       </View>
-
-      <Text style={styles.label}>Ênfase do superior</Text>
-      <View style={styles.chipRow}>
-        {GENERATOR_EMPHASES.map((e) => (
-          <Chip key={e.key} label={e.label} selected={emphasis === e.key} onPress={() => setEmphasis(e.key)} />
-        ))}
-      </View>
       <Text style={styles.hint}>
-        Ao terminar o bloco, gere o próximo trocando a ênfase (antagonistas ↔ push/pull) para variar o
-        estímulo.
+        Depois desse período, gere um treino novo para variar o estímulo e continuar evoluindo.
       </Text>
 
       <Button title="Gerar treino" onPress={handleGenerate} style={{ marginTop: spacing.md }} />
