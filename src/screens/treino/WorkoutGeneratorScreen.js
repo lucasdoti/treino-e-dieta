@@ -92,14 +92,15 @@ export default function WorkoutGeneratorScreen({ navigation }) {
         ))}
       </View>
 
-      <Text style={styles.label}>Por quantos meses vai treinar?</Text>
+      <Text style={styles.label}>Duração até renovar o treino</Text>
       <View style={styles.chipRow}>
         {GENERATOR_BLOCKS.map((b) => (
           <Chip key={b.key} label={b.label} selected={blockMonths === b.key} onPress={() => setBlockMonths(b.key)} />
         ))}
       </View>
       <Text style={styles.hint}>
-        Depois desse período, gere um treino novo para variar o estímulo e continuar evoluindo.
+        Você segue com este treino por esse período. Ao terminar, é só gerar o próximo para variar o
+        estímulo e continuar evoluindo.
       </Text>
 
       <Button title="Gerar treino" onPress={handleGenerate} style={{ marginTop: spacing.md }} />
