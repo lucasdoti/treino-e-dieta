@@ -13,16 +13,42 @@ const SET_REP_BY_GOAL = {
   emagrecimento: { sets: 3, repsMin: 12, repsMax: 15 },
 };
 
-// Split superior/inferior. O superior inclui costas (maior músculo do tronco)
-// e antebraço como acessório. O glúteo é treinado dentro de posterior.
-const LOWER_GROUPS = ['quadriceps', 'posterior', 'panturrilha', 'core'];
+// Divisão do treino: em vez de "superior inteiro num dia" (que vira 1 exercício
+// de cada), foca ~2 grupos por dia pra dar volume de verdade. Pernas ficam
+// juntas (treino de perna completo). A divisão muda conforme os dias/semana.
+const LEGS = ['quadriceps', 'posterior', 'panturrilha', 'core'];
 
-// A ênfase muda como o superior é organizado e rotaciona entre blocos:
-// - antagonista: pares opostos (peito↔costas, bíceps↔tríceps) — bom p/ superséries
-// - push_pull: empurrar (peito/ombro/tríceps) depois puxar (costas/bíceps)
-const UPPER_GROUPS_BY_EMPHASIS = {
-  antagonista: ['peito', 'costas', 'biceps', 'triceps', 'ombro', 'antebraco'],
-  push_pull: ['peito', 'ombro', 'triceps', 'costas', 'biceps', 'antebraco'],
+const SPLIT_BY_DAYS = {
+  2: [
+    { name: 'Superior', groups: ['peito', 'costas', 'ombro', 'biceps', 'triceps'] },
+    { name: 'Inferior', groups: LEGS },
+  ],
+  3: [
+    { name: 'Peito, Ombro e Tríceps', groups: ['peito', 'ombro', 'triceps'] },
+    { name: 'Costas e Bíceps', groups: ['costas', 'biceps', 'antebraco'] },
+    { name: 'Pernas', groups: LEGS },
+  ],
+  4: [
+    { name: 'Peito e Tríceps', groups: ['peito', 'triceps'] },
+    { name: 'Costas e Bíceps', groups: ['costas', 'biceps', 'antebraco'] },
+    { name: 'Ombro e Core', groups: ['ombro', 'core'] },
+    { name: 'Pernas', groups: LEGS },
+  ],
+  5: [
+    { name: 'Peito e Tríceps', groups: ['peito', 'triceps'] },
+    { name: 'Costas e Bíceps', groups: ['costas', 'biceps', 'antebraco'] },
+    { name: 'Pernas', groups: ['quadriceps', 'posterior', 'panturrilha'] },
+    { name: 'Ombro e Core', groups: ['ombro', 'core'] },
+    { name: 'Braços', groups: ['biceps', 'triceps', 'antebraco'] },
+  ],
+  6: [
+    { name: 'Peito, Ombro e Tríceps A', groups: ['peito', 'ombro', 'triceps'] },
+    { name: 'Costas e Bíceps A', groups: ['costas', 'biceps', 'antebraco'] },
+    { name: 'Pernas A', groups: LEGS },
+    { name: 'Peito, Ombro e Tríceps B', groups: ['peito', 'ombro', 'triceps'] },
+    { name: 'Costas e Bíceps B', groups: ['costas', 'biceps', 'antebraco'] },
+    { name: 'Pernas B', groups: LEGS },
+  ],
 };
 
 // Prioridade de alocação quando o tempo é curto (músculos maiores primeiro).
@@ -56,18 +82,10 @@ function nearestKey(map, value) {
   );
 }
 
-// Sequência de dias no microciclo: alterna superior/inferior começando pelo
-// superior. Ex.: 3 dias => Sup / Inf / Sup (repete igual na semana seguinte).
-function daySequence(days) {
-  const seq = [];
-  for (let i = 0; i < days; i += 1) {
-    seq.push(i % 2 === 0 ? 'superior' : 'inferior');
-  }
-  return seq;
-}
-
 // Decide quantos exercícios cada grupo recebe, respeitando o orçamento total.
-// Distribui 1 por grupo (por prioridade) e depois reforça os maiores até o teto.
+// Distribui 1 por grupo e depois REFORÇA só os grupos principais (prioridade
+// alta) até o teto — assim os acessórios (antebraço, core, panturrilha) ficam
+// em 1 e o volume vai pros músculos foco do dia.
 function allocateCounts(groups, budget, maxPerGroup) {
   const counts = {};
   groups.forEach((g) => {
@@ -89,7 +107,8 @@ function allocateCounts(groups, budget, maxPerGroup) {
     added = false;
     for (const g of byPriority) {
       if (remaining <= 0) break;
-      if (counts[g] > 0 && counts[g] < maxPerGroup) {
+      const isMain = (GROUP_PRIORITY[g] ?? 0) >= 4;
+      if (isMain && counts[g] > 0 && counts[g] < maxPerGroup) {
         counts[g] += 1;
         remaining -= 1;
         added = true;
@@ -115,24 +134,22 @@ export function generateWorkoutPlan({
   placeKey,
   levelKey,
   timeKey = 60,
-  emphasis = 'antagonista',
   blockMonths = 1,
 }) {
   const allowedEquipment = EQUIPMENT_BY_PLACE[placeKey] ?? EQUIPMENT_BY_PLACE.academia;
   const setRep = SET_REP_BY_GOAL[goalKey] ?? SET_REP_BY_GOAL.hipertrofia;
-  const upperGroups = UPPER_GROUPS_BY_EMPHASIS[emphasis] ?? UPPER_GROUPS_BY_EMPHASIS.antagonista;
-  const maxPerGroup = levelKey === 'avancado' ? 3 : 2;
+  const maxPerGroup = levelKey === 'avancado' ? 4 : 3;
+
+  const days = Math.min(6, Math.max(2, daysPerWeek));
+  const split = SPLIT_BY_DAYS[days] ?? SPLIT_BY_DAYS[3];
 
   const budgetTime = nearestKey(EXERCISE_BUDGET_BY_TIME, timeKey);
   let budget = EXERCISE_BUDGET_BY_TIME[budgetTime];
   if (levelKey === 'iniciante') budget = Math.max(3, budget - 1);
   else if (levelKey === 'avancado') budget += 1;
 
-  const sequence = daySequence(daysPerWeek);
-  const typeCounter = { superior: 0, inferior: 0 };
-
-  const templates = sequence.map((dayType, dayIndex) => {
-    const groups = dayType === 'superior' ? upperGroups : LOWER_GROUPS;
+  const templates = split.map((day, dayIndex) => {
+    const groups = day.groups;
     const counts = allocateCounts(groups, budget, maxPerGroup);
 
     const exerciseEntries = [];
@@ -154,32 +171,18 @@ export function generateWorkoutPlan({
       );
       const cardio = cardioOptions[dayIndex % cardioOptions.length] ?? cardioOptions[0];
       if (cardio) {
-        exerciseEntries.push({
-          exerciseId: cardio.id,
-          targetDurationMin: 25,
-        });
+        exerciseEntries.push({ exerciseId: cardio.id, targetDurationMin: 25 });
       }
     }
 
-    typeCounter[dayType] += 1;
-    const letter = String.fromCharCode(64 + typeCounter[dayType]); // A, B, C...
-    const baseName = dayType === 'superior' ? 'Superior' : 'Inferior';
-
     return {
-      name: `${baseName} ${letter}`,
-      dayType,
-      emphasis,
+      name: day.name,
       blockMonths,
       exerciseEntries,
     };
   });
 
   return templates;
-}
-
-// Alterna a ênfase entre um bloco e o próximo (o "depois ao contrário").
-export function nextEmphasis(emphasis) {
-  return emphasis === 'antagonista' ? 'push_pull' : 'antagonista';
 }
 
 export const GENERATOR_GOALS = [
@@ -212,9 +215,4 @@ export const GENERATOR_BLOCKS = [
   { key: 1, label: '1 mês' },
   { key: 2, label: '2 meses' },
   { key: 3, label: '3 meses' },
-];
-
-export const GENERATOR_EMPHASES = [
-  { key: 'antagonista', label: 'Antagonistas' },
-  { key: 'push_pull', label: 'Push / Pull' },
 ];

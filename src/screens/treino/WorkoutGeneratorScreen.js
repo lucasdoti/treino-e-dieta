@@ -25,8 +25,6 @@ export default function WorkoutGeneratorScreen({ navigation }) {
   const [timeKey, setTimeKey] = useState(60);
   const [blockMonths, setBlockMonths] = useState(1);
   const [preview, setPreview] = useState(null);
-  // Ênfase do superior é definida internamente (o usuário não precisa escolher).
-  const emphasis = 'antagonista';
 
   function handleGenerate() {
     const plan = generateWorkoutPlan({
@@ -36,7 +34,6 @@ export default function WorkoutGeneratorScreen({ navigation }) {
       levelKey,
       timeKey,
       blockMonths,
-      emphasis,
     });
     setPreview(plan);
   }
