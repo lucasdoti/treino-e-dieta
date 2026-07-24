@@ -1,4 +1,5 @@
 import { EXERCISE_LIBRARY } from '../data/exerciseLibrary';
+import { isExerciseAllowed, adjustSetRep } from '../data/restrictions';
 
 const EQUIPMENT_BY_PLACE = {
   academia: ['barra', 'halteres', 'maquina', 'cabo', 'peso_corporal', 'cardio_equip'],
@@ -118,9 +119,12 @@ function allocateCounts(groups, budget, maxPerGroup) {
   return counts;
 }
 
-function pickExercisesForGroup(group, allowedEquipment, offset, count) {
+function pickExercisesForGroup(group, allowedEquipment, offset, count, restrictions) {
   const options = EXERCISE_LIBRARY.filter(
-    (ex) => ex.muscleGroup === group && allowedEquipment.includes(ex.equipment)
+    (ex) =>
+      ex.muscleGroup === group &&
+      allowedEquipment.includes(ex.equipment) &&
+      isExerciseAllowed(ex, restrictions)
   );
   if (options.length === 0 || count <= 0) return [];
   const start = offset % options.length;
@@ -135,9 +139,10 @@ export function generateWorkoutPlan({
   levelKey,
   timeKey = 60,
   blockMonths = 1,
+  restrictions = [],
 }) {
   const allowedEquipment = EQUIPMENT_BY_PLACE[placeKey] ?? EQUIPMENT_BY_PLACE.academia;
-  const setRep = SET_REP_BY_GOAL[goalKey] ?? SET_REP_BY_GOAL.hipertrofia;
+  const setRep = adjustSetRep(SET_REP_BY_GOAL[goalKey] ?? SET_REP_BY_GOAL.hipertrofia, restrictions);
   const maxPerGroup = levelKey === 'avancado' ? 4 : 3;
 
   const days = Math.min(6, Math.max(2, daysPerWeek));
@@ -154,7 +159,7 @@ export function generateWorkoutPlan({
 
     const exerciseEntries = [];
     groups.forEach((group) => {
-      const picked = pickExercisesForGroup(group, allowedEquipment, dayIndex, counts[group]);
+      const picked = pickExercisesForGroup(group, allowedEquipment, dayIndex, counts[group], restrictions);
       picked.forEach((exercise) => {
         exerciseEntries.push({
           exerciseId: exercise.id,
@@ -167,7 +172,10 @@ export function generateWorkoutPlan({
 
     if (goalKey === 'emagrecimento') {
       const cardioOptions = EXERCISE_LIBRARY.filter(
-        (ex) => ex.muscleGroup === 'cardio' && allowedEquipment.includes(ex.equipment)
+        (ex) =>
+          ex.muscleGroup === 'cardio' &&
+          allowedEquipment.includes(ex.equipment) &&
+          isExerciseAllowed(ex, restrictions)
       );
       const cardio = cardioOptions[dayIndex % cardioOptions.length] ?? cardioOptions[0];
       if (cardio) {

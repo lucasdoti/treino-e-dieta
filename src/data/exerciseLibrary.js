@@ -103,6 +103,7 @@ export const EXERCISE_LIBRARY = [
   { id: 'lib-pular-corda', name: 'Pular corda', muscleGroup: 'cardio', equipment: 'peso_corporal' },
   { id: 'lib-corrida-rua', name: 'Corrida na rua', muscleGroup: 'cardio', equipment: 'peso_corporal' },
   { id: 'lib-hiit', name: 'HIIT (circuito)', muscleGroup: 'cardio', equipment: 'peso_corporal' },
+  { id: 'lib-fitdance', name: 'FitDance (dança)', muscleGroup: 'cardio', equipment: 'peso_corporal' },
 ];
 
 export function getMuscleGroupLabel(key) {

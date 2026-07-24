@@ -426,6 +426,14 @@ export const EXERCISE_INSTRUCTIONS = {
       'Siga pelo tempo alvo.',
     ],
   },
+  'lib-fitdance': {
+    steps: [
+      'Siga uma coreografia de dança (aula presencial ou vídeo).',
+      'Mantenha o corpo em movimento e a respiração ativa.',
+      'Siga pelo tempo alvo, no seu ritmo.',
+    ],
+    tip: 'Ótimo cardio divertido; ajuste a intensidade ao seu condicionamento.',
+  },
 };
 
 export function getExerciseInstructions(id) {

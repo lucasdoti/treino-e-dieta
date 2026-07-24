@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import Screen from '../../components/Screen';
 import Chip from '../../components/Chip';
 import Button from '../../components/Button';
@@ -14,6 +15,7 @@ import {
   GENERATOR_BLOCKS,
 } from '../../utils/workoutGenerator';
 import { muscleGroupSummary } from '../../utils/workout';
+import { RESTRICTIONS } from '../../data/restrictions';
 import { colors, spacing, radius } from '../../theme/colors';
 
 export default function WorkoutGeneratorScreen({ navigation }) {
@@ -24,7 +26,12 @@ export default function WorkoutGeneratorScreen({ navigation }) {
   const [daysPerWeek, setDaysPerWeek] = useState(3);
   const [timeKey, setTimeKey] = useState(60);
   const [blockMonths, setBlockMonths] = useState(1);
+  const [restrictions, setRestrictions] = useState([]);
   const [preview, setPreview] = useState(null);
+
+  function toggleRestriction(key) {
+    setRestrictions((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
+  }
 
   function handleGenerate() {
     const plan = generateWorkoutPlan({
@@ -34,6 +41,7 @@ export default function WorkoutGeneratorScreen({ navigation }) {
       levelKey,
       timeKey,
       blockMonths,
+      restrictions,
     });
     setPreview(plan);
   }
@@ -101,6 +109,28 @@ export default function WorkoutGeneratorScreen({ navigation }) {
         estímulo e continuar evoluindo.
       </Text>
 
+      <Text style={styles.label}>Restrições / adaptações</Text>
+      <View style={styles.chipRow}>
+        {RESTRICTIONS.map((r) => (
+          <Chip
+            key={r.key}
+            label={r.label}
+            selected={restrictions.includes(r.key)}
+            onPress={() => toggleRestriction(r.key)}
+          />
+        ))}
+      </View>
+      {restrictions.length > 0 ? (
+        <View style={styles.warning}>
+          <Ionicons name="warning-outline" size={16} color={colors.warning} />
+          <Text style={styles.warningText}>
+            As adaptações são precauções gerais e removem exercícios de maior risco. Não substituem
+            avaliação médica. Em caso de gravidez, lesão ou condição de saúde, confirme com seu médico
+            e um profissional de educação física.
+          </Text>
+        </View>
+      ) : null}
+
       <Button title="Gerar treino" onPress={handleGenerate} style={{ marginTop: spacing.md }} />
 
       {preview ? (
@@ -135,6 +165,15 @@ export default function WorkoutGeneratorScreen({ navigation }) {
 const styles = StyleSheet.create({
   label: { color: colors.textMuted, marginBottom: spacing.sm, fontSize: 13, fontWeight: '600' },
   hint: { color: colors.textFaint, fontSize: 12, lineHeight: 17, marginTop: -spacing.xs },
+  warning: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: radius.sm,
+    padding: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  warningText: { color: colors.textMuted, fontSize: 12, lineHeight: 17, flex: 1 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: spacing.md },
   stepper: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md },
   stepperBtn: {
