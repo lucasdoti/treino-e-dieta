@@ -13,6 +13,7 @@ import WorkoutSessionScreen from '../screens/treino/WorkoutSessionScreen';
 import WorkoutGeneratorScreen from '../screens/treino/WorkoutGeneratorScreen';
 import WorkoutLogDetailScreen from '../screens/treino/WorkoutLogDetailScreen';
 import ExercisePickerScreen from '../screens/treino/ExercisePickerScreen';
+import ExerciseDetailScreen from '../screens/treino/ExerciseDetailScreen';
 
 import DietHomeScreen from '../screens/dieta/DietHomeScreen';
 import FoodCatalogScreen from '../screens/dieta/FoodCatalogScreen';
@@ -81,6 +82,11 @@ function TreinoStack() {
         name="ExercisePicker"
         component={ExercisePickerScreen}
         options={{ title: 'Escolher exercício' }}
+      />
+      <TreinoStackNav.Screen
+        name="ExerciseDetail"
+        component={ExerciseDetailScreen}
+        options={{ title: 'Exercício' }}
       />
     </TreinoStackNav.Navigator>
   );

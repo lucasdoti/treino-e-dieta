@@ -37,7 +37,7 @@ export default function ExerciseLibraryScreen({ navigation }) {
         renderItem={({ item }) => (
           <Pressable
             style={styles.item}
-            onPress={() => item.isCustom && navigation.navigate('ExerciseForm', { exerciseId: item.id })}
+            onPress={() => navigation.navigate('ExerciseDetail', { exerciseId: item.id })}
           >
             <View style={{ flex: 1 }}>
               <Text style={styles.itemName}>{item.name}</Text>

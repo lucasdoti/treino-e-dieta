@@ -156,9 +156,21 @@ export default function WorkoutSessionScreen({ navigation, route }) {
           <Card key={index} style={{ marginBottom: spacing.md }}>
             <View style={styles.entryHeader}>
               <Text style={styles.entryName}>{exercise?.name ?? 'Exercício'}</Text>
-              <Pressable onPress={() => removeExercise(index)}>
-                <Ionicons name="close" size={20} color={colors.textFaint} />
-              </Pressable>
+              <View style={styles.entryHeaderActions}>
+                {exercise ? (
+                  <Pressable
+                    onPress={() =>
+                      navigation.navigate('ExerciseDetail', { exerciseId: exercise.id })
+                    }
+                    hitSlop={8}
+                  >
+                    <Ionicons name="help-circle-outline" size={20} color={colors.accent} />
+                  </Pressable>
+                ) : null}
+                <Pressable onPress={() => removeExercise(index)} hitSlop={8}>
+                  <Ionicons name="close" size={20} color={colors.textFaint} />
+                </Pressable>
+              </View>
             </View>
 
             {isCardio && entry.targetDurationMin ? (
@@ -253,6 +265,7 @@ const styles = StyleSheet.create({
   title: { color: colors.text, fontSize: 20, fontWeight: '700' },
   groups: { color: colors.primary, fontSize: 13, fontWeight: '600', marginTop: 2, marginBottom: spacing.md },
   entryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  entryHeaderActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   entryName: { color: colors.text, fontSize: 15, fontWeight: '600', flex: 1 },
   meta: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
   suggestion: { color: colors.primary, fontSize: 12, marginTop: spacing.xs, fontWeight: '600' },
