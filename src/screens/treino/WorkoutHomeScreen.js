@@ -6,10 +6,11 @@ import Card from '../../components/Card';
 import Button from '../../components/Button';
 import { useAppData } from '../../context/AppDataContext';
 import { formatDateBR } from '../../utils/date';
+import { muscleGroupSummary } from '../../utils/workout';
 import { colors, spacing } from '../../theme/colors';
 
 export default function WorkoutHomeScreen({ navigation }) {
-  const { workoutTemplates, workoutLogs } = useAppData();
+  const { workoutTemplates, workoutLogs, getExerciseById } = useAppData();
 
   const recentLogs = [...workoutLogs].sort((a, b) => (a.date < b.date ? 1 : -1)).slice(0, 5);
 
@@ -34,7 +35,9 @@ export default function WorkoutHomeScreen({ navigation }) {
       {workoutTemplates.length === 0 ? (
         <Text style={styles.empty}>Nenhum treino cadastrado ainda.</Text>
       ) : (
-        workoutTemplates.map((template) => (
+        workoutTemplates.map((template) => {
+          const groups = muscleGroupSummary(template.exerciseEntries, getExerciseById);
+          return (
           <Card key={template.id} style={{ marginBottom: spacing.sm }}>
             <View style={styles.templateRow}>
               <Pressable
@@ -42,6 +45,7 @@ export default function WorkoutHomeScreen({ navigation }) {
                 onPress={() => navigation.navigate('WorkoutSession', { templateId: template.id })}
               >
                 <Text style={styles.templateName}>{template.name}</Text>
+                {groups ? <Text style={styles.templateGroups}>{groups}</Text> : null}
                 <Text style={styles.templateMeta}>
                   {template.exerciseEntries.length} exercício(s)
                 </Text>
@@ -53,7 +57,8 @@ export default function WorkoutHomeScreen({ navigation }) {
               </Pressable>
             </View>
           </Card>
-        ))
+          );
+        })
       )}
 
       <Button
@@ -96,6 +101,7 @@ const styles = StyleSheet.create({
   sectionTitle: { color: colors.text, fontSize: 16, fontWeight: '700', marginBottom: spacing.sm },
   templateRow: { flexDirection: 'row', alignItems: 'center' },
   templateName: { color: colors.text, fontSize: 15, fontWeight: '600' },
+  templateGroups: { color: colors.primary, fontSize: 12, fontWeight: '600', marginTop: 2 },
   templateMeta: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
   logDate: { color: colors.textFaint, fontSize: 11 },
   empty: { color: colors.textFaint, fontSize: 13, marginBottom: spacing.md },

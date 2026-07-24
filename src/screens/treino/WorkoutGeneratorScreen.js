@@ -13,6 +13,7 @@ import {
   GENERATOR_TIMES,
   GENERATOR_BLOCKS,
 } from '../../utils/workoutGenerator';
+import { muscleGroupSummary } from '../../utils/workout';
 import { colors, spacing, radius } from '../../theme/colors';
 
 export default function WorkoutGeneratorScreen({ navigation }) {
@@ -110,6 +111,9 @@ export default function WorkoutGeneratorScreen({ navigation }) {
           {preview.map((template, i) => (
             <Card key={i} style={{ marginBottom: spacing.sm }}>
               <Text style={styles.templateName}>{template.name}</Text>
+              <Text style={styles.templateGroups}>
+                {muscleGroupSummary(template.exerciseEntries, getExerciseById)}
+              </Text>
               {template.exerciseEntries.map((entry, j) => {
                 const exercise = getExerciseById(entry.exerciseId);
                 const isCardio = exercise?.muscleGroup === 'cardio';
@@ -146,6 +150,7 @@ const styles = StyleSheet.create({
   },
   stepperBtnText: { color: colors.text, fontSize: 18, fontWeight: '700' },
   stepperValue: { color: colors.text, fontSize: 16, fontWeight: '700', width: 40, textAlign: 'center' },
-  templateName: { color: colors.text, fontSize: 15, fontWeight: '700', marginBottom: spacing.xs },
+  templateName: { color: colors.text, fontSize: 15, fontWeight: '700' },
+  templateGroups: { color: colors.primary, fontSize: 12, fontWeight: '600', marginBottom: spacing.xs, marginTop: 2 },
   exerciseLine: { color: colors.textMuted, fontSize: 13, marginTop: 2 },
 });

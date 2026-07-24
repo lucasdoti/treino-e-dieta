@@ -8,6 +8,7 @@ import TextField from '../../components/TextField';
 import RestTimer from '../../components/RestTimer';
 import { useAppData } from '../../context/AppDataContext';
 import { suggestNextSession, detectPersonalRecords } from '../../utils/progression';
+import { muscleGroupSummary } from '../../utils/workout';
 import { notify } from '../../utils/confirm';
 import { todayISO, formatDateBR } from '../../utils/date';
 import { colors, spacing, radius } from '../../theme/colors';
@@ -22,6 +23,7 @@ export default function WorkoutSessionScreen({ navigation, route }) {
     if (!template) return [];
     return template.exerciseEntries.map((entry) => ({
       exerciseId: entry.exerciseId,
+      targetSets: entry.targetSets ?? null,
       targetRepsMin: entry.targetRepsMin,
       targetRepsMax: entry.targetRepsMax,
       targetDurationMin: entry.targetDurationMin ?? null,
@@ -125,6 +127,11 @@ export default function WorkoutSessionScreen({ navigation, route }) {
     <Screen>
       <Text style={styles.date}>{formatDateBR(logDate)}</Text>
       <Text style={styles.title}>{template?.name ?? 'Treino avulso'}</Text>
+      {template ? (
+        <Text style={styles.groups}>
+          {muscleGroupSummary(template.exerciseEntries, getExerciseById)}
+        </Text>
+      ) : null}
 
       <RestTimer defaultSeconds={profile.restSeconds ?? 90} startSignal={restSignal} />
 
@@ -159,7 +166,8 @@ export default function WorkoutSessionScreen({ navigation, route }) {
             ) : null}
             {!isCardio && entry.targetRepsMin ? (
               <Text style={styles.meta}>
-                Alvo: {entry.targetRepsMin}-{entry.targetRepsMax} reps
+                Alvo: {entry.targetSets ? `${entry.targetSets} séries de ` : ''}
+                {entry.targetRepsMin} a {entry.targetRepsMax} reps
               </Text>
             ) : null}
 
@@ -242,7 +250,8 @@ function isLowerBody(muscleGroup) {
 
 const styles = StyleSheet.create({
   date: { color: colors.textFaint, fontSize: 12 },
-  title: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: spacing.md },
+  title: { color: colors.text, fontSize: 20, fontWeight: '700' },
+  groups: { color: colors.primary, fontSize: 13, fontWeight: '600', marginTop: 2, marginBottom: spacing.md },
   entryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   entryName: { color: colors.text, fontSize: 15, fontWeight: '600', flex: 1 },
   meta: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
